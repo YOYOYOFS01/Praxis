@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TENANT — top-level org unit. Each tenant has its own budget, policies,
+//          vendor allowlist, and API keys.
+// ─────────────────────────────────────────────────────────────────────────────
+model Tenant {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique   // e.g. "acme-corp" — used in API key prefix
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  apiKeys       ApiKey[]
+  runs          Run[]
+  policyConfig  PolicyConfig?
+  vendorAllowlist VendorAllowlist[]
+  auditLogs     AuditLog[]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// API KEY — hashed bearer token. One tenant can have multiple keys
+//           (rotation, per-service scoping).
+//
+// Never store raw keys. Store only the SHA-256 hash.
+// The raw key is shown once at creation time and never again.
+// ─────────────────────────────────────────────────────────────────────────────
+model ApiKey {
+  id          String    @id @default(cuid())
+  tenantId    String
+  name        String                      // human label e.g. "CI pipeline", "dashboard"
+  keyHash     String    @unique           // SHA-256 of raw key (hex, no prefix)
+  keyPrefix   String                      // first 8 chars of raw key for display e.g. "prx_live"
+  scopes      String    @default("run:create,run:read,run:approve")  // comma-separated
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime?                   // null = never expires
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  revokedAt   DateTime?
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  auditLogs AuditLog[]
+
+  @@index([keyHash])
+  @@index([tenantId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POLICY CONFIG — per-tenant payment limits and guard settings.
+//                Overrides the global env-var defaults.
+// ─────────────────────────────────────────────────────────────────────────────
+model PolicyConfig {
+  id                    String   @id @default(cuid())
+  tenantId              String   @unique
+  maxSinglePaymentUsdc  Float    @default(50000)
+  dailyBudgetUsd        Float    @default(500000)
+  hitlThresholdUsdc     Float    @default(0)       // 0 = always auto-approve
+  requireProofForAll    Boolean  @default(true)
+  allowMockPayments     Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VENDOR ALLOWLIST — per-tenant list of approved vendors.
+//                    Replaces the hardcoded array in policy-guard.ts.
+// ─────────────────────────────────────────────────────────────────────────────
+model VendorAllowlist {
+  id             String   @id @default(cuid())
+  tenantId       String
+  vendorName     String                            // stored lowercase for comparison
+  paymentAddress String?                           // optional EVM address lock
+  maxOrderUsdc   Float?                            // optional per-vendor cap
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, vendorName])
+  @@index([tenantId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RUN — one procurement workflow execution.
+//       Now tenant-scoped. All JSON stored as String (SQLite limitation).
+// ─────────────────────────────────────────────────────────────────────────────
+model Run {
+  id              String    @id @default(cuid())
+  tenantId        String?                          // null = legacy / demo run
+  apiKeyId        String?                          // which key triggered this run
+  status          String    @default("running")
+  prompt          String
+  intentJson      String?
+  quoteJson       String?
+  budgetJson      String?
+  policyJson      String?
+  proofJson       String?
+  proofHash       String?
+  paymentJson     String?
+  receiptJson     String?
+  protectedJson   String?
+  chainAnchorJson String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant  Tenant?    @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  events  RunEvent[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([proofHash])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RUN EVENT — timeline entry for a single workflow step.
+// ─────────────────────────────────────────────────────────────────────────────
+model RunEvent {
+  id        String   @id @default(cuid())
+  runId     String
+  type      String   // workflow | guard | proof | payment | chain | hitl
+  label     String
+  status    String   // pending | success | failed | rejected
+  payload   String?  // JSON string
+  createdAt DateTime @default(now())
+
+  run Run @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([type])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUDIT LOG — immutable record of every security-relevant action.
+//             Never deleted. Append-only by design.
+// ─────────────────────────────────────────────────────────────────────────────
+model AuditLog {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  apiKeyId  String?
+  action    String   // e.g. "run.create", "run.approve", "key.create", "key.revoke"
+  actorType String   // "api_key" | "system" | "human"
+  resourceId String? // runId, apiKeyId, etc.
+  metadata  String?  // JSON string — sanitised (no secrets)
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  tenant Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  apiKey ApiKey?  @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([action])
+  @@index([createdAt])
+}
