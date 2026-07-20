@@ -24,11 +24,19 @@ export function ChatPanel({ onSubmit, loading }: Props) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-      <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      {/* Label */}
+      <p style={{
+        fontSize: "10px",
+        fontWeight: 700,
+        color: "var(--text-muted)",
+        textTransform: "uppercase",
+        letterSpacing: "0.18em",
+      }}>
         Procurement Prompt
       </p>
 
+      {/* Form */}
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         <textarea
           value={prompt}
@@ -38,13 +46,23 @@ export function ChatPanel({ onSubmit, loading }: Props) {
           style={{
             background: "var(--surface-2)",
             border: "1px solid var(--border)",
-            borderRadius: "6px",
+            borderRadius: "var(--radius-md)",
             color: "var(--text)",
-            padding: "10px 12px",
+            padding: "11px 13px",
             fontSize: "13px",
             resize: "vertical",
             fontFamily: "inherit",
             outline: "none",
+            lineHeight: 1.6,
+            transition: "border-color 0.15s, box-shadow 0.15s",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
+            e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,255,255,0.04)";
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = "var(--border)";
+            e.currentTarget.style.boxShadow = "none";
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -57,23 +75,52 @@ export function ChatPanel({ onSubmit, loading }: Props) {
           type="submit"
           disabled={loading || !prompt.trim()}
           style={{
-            background: loading ? "var(--surface-2)" : "var(--orange)",
-            color: loading ? "var(--text-muted)" : "#fff",
+            background: loading || !prompt.trim()
+              ? "var(--surface-3)"
+              : "var(--orange)",
+            color: loading || !prompt.trim()
+              ? "var(--text-muted)"
+              : "#fff",
             border: "none",
-            borderRadius: "6px",
-            padding: "9px 16px",
+            borderRadius: "var(--radius-md)",
+            padding: "10px 16px",
             fontSize: "13px",
             fontWeight: 600,
-            cursor: loading ? "not-allowed" : "pointer",
-            transition: "opacity 0.15s",
+            cursor: loading || !prompt.trim() ? "not-allowed" : "pointer",
+            transition: "background 0.15s, transform 0.1s",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+            letterSpacing: "-0.01em",
           }}
+          onMouseDown={(e) => {
+            if (!loading && prompt.trim()) e.currentTarget.style.transform = "scale(0.98)";
+          }}
+          onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
         >
-          {loading ? "Running…" : "Run Procurement →"}
+          {loading ? (
+            <>
+              <span style={{ animation: "spin 0.9s linear infinite", display: "inline-block" }}>◌</span>
+              Running…
+            </>
+          ) : (
+            <>Run Procurement →</>
+          )}
         </button>
       </form>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-        <p style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Examples</p>
+      {/* Examples */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+        <p style={{
+          fontSize: "10px",
+          fontWeight: 600,
+          color: "var(--text-muted)",
+          textTransform: "uppercase",
+          letterSpacing: "0.15em",
+        }}>
+          Examples
+        </p>
         {EXAMPLES.map((ex) => (
           <button
             key={ex}
@@ -81,16 +128,25 @@ export function ChatPanel({ onSubmit, loading }: Props) {
             style={{
               background: "transparent",
               border: "1px solid var(--border)",
-              borderRadius: "4px",
-              color: "var(--text-muted)",
-              padding: "5px 8px",
-              fontSize: "11px",
+              borderRadius: "var(--radius)",
+              color: "var(--text-2)",
+              padding: "7px 10px",
+              fontSize: "11.5px",
               textAlign: "left",
               cursor: "pointer",
-              transition: "border-color 0.15s",
+              transition: "border-color 0.15s, background 0.15s, color 0.15s",
+              lineHeight: 1.5,
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#444")}
-            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
+              e.currentTarget.style.background = "var(--surface-2)";
+              e.currentTarget.style.color = "var(--text)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--border)";
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "var(--text-2)";
+            }}
           >
             {ex}
           </button>

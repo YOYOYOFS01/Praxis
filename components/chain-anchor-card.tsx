@@ -8,13 +8,13 @@ interface Props {
 
 export function ChainAnchorCard({ anchor }: Props) {
   const anchorTx = String(anchor.anchorTxHash ?? "");
-  const isMock = anchorTx.startsWith("0xmock");
+  const isMock   = anchorTx.startsWith("0xmock");
   const basescanUrl = isMock
     ? null
     : `https://sepolia.basescan.org/tx/${anchorTx}`;
 
   return (
-    <Card title="Chain Anchor — Base Sepolia" borderColor="var(--purple)">
+    <Card title="Chain Anchor — Base Sepolia" accentColor="var(--purple)" accentFill="var(--purple-fill)" icon="⬡">
       <Row label="Network"     value={String(anchor.network ?? "—")} />
       <Row label="Chain ID"    value={String(anchor.chainId ?? "—")} />
       <Row label="Registry"    value={truncate(String(anchor.registryAddress ?? "—"))} mono />
@@ -24,15 +24,16 @@ export function ChainAnchorCard({ anchor }: Props) {
 
       {isMock && (
         <div style={{
-          marginTop: "8px",
-          padding: "6px 10px",
-          background: "var(--surface-2)",
+          marginTop: "4px",
+          padding: "8px 12px",
+          background: "rgba(255,255,255,0.03)",
           border: "1px solid var(--border)",
-          borderRadius: "4px",
+          borderRadius: "var(--radius)",
           fontSize: "11px",
           color: "var(--text-muted)",
+          lineHeight: 1.5,
         }}>
-          Mock anchor — set CHAIN_MODE=base-sepolia for live BaseScan link
+          Mock anchor — set <code style={{ fontFamily: "monospace", color: "var(--text-2)" }}>CHAIN_MODE=base-sepolia</code> for a live BaseScan link
         </div>
       )}
 
@@ -42,15 +43,27 @@ export function ChainAnchorCard({ anchor }: Props) {
           target="_blank"
           rel="noreferrer"
           style={{
-            display: "inline-block",
-            marginTop: "10px",
-            padding: "6px 14px",
-            background: "var(--surface-2)",
-            border: "1px solid var(--purple)",
-            borderRadius: "4px",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            marginTop: "6px",
+            padding: "8px 14px",
+            background: "var(--purple-fill)",
+            border: "1px solid rgba(144,112,208,0.3)",
+            borderRadius: "var(--radius-md)",
             fontSize: "12px",
-            color: "var(--purple)",
             fontWeight: 600,
+            color: "var(--purple)",
+            transition: "background 0.15s, border-color 0.15s",
+            alignSelf: "flex-start",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(144,112,208,0.2)";
+            e.currentTarget.style.borderColor = "rgba(144,112,208,0.5)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "var(--purple-fill)";
+            e.currentTarget.style.borderColor = "rgba(144,112,208,0.3)";
           }}
         >
           View on BaseScan ↗

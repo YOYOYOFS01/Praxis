@@ -12,46 +12,71 @@ export function ApprovalModal({ run, onApprove, onReject }: Props) {
 
   return (
     <div style={{
-      position: "fixed", inset: 0,
-      background: "rgba(0,0,0,0.7)",
-      display: "flex", alignItems: "center", justifyContent: "center",
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.75)",
+      backdropFilter: "blur(6px)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
       zIndex: 1000,
+      padding: "20px",
     }}>
       <div style={{
         background: "var(--surface)",
-        border: "1px solid var(--yellow)",
-        borderRadius: "10px",
-        padding: "28px 32px",
-        maxWidth: "480px",
+        border: "1px solid rgba(212,168,64,0.3)",
+        borderRadius: "var(--radius-xl)",
+        padding: "28px",
+        maxWidth: "460px",
         width: "100%",
         display: "flex",
         flexDirection: "column",
-        gap: "16px",
+        gap: "18px",
+        boxShadow: "0 24px 64px rgba(0,0,0,0.6)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "1.2rem" }}>⚠</span>
-          <h2 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--yellow)" }}>
-            Human Approval Required
-          </h2>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+          <div style={{
+            width: "36px", height: "36px",
+            background: "var(--yellow-fill)",
+            border: "1px solid rgba(212,168,64,0.3)",
+            borderRadius: "var(--radius-md)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "16px",
+            flexShrink: 0,
+          }}>
+            ⚠
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <h2 style={{
+              fontSize: "14px",
+              fontWeight: 700,
+              color: "var(--yellow)",
+              letterSpacing: "-0.01em",
+            }}>
+              Human Approval Required
+            </h2>
+            <p style={{ fontSize: "12.5px", color: "var(--text-muted)", lineHeight: 1.55 }}>
+              This payment exceeds the auto-approval threshold and requires your authorisation.
+            </p>
+          </div>
         </div>
 
-        <p style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.5 }}>
-          This payment exceeds the auto-approval threshold and requires your authorisation.
-        </p>
-
+        {/* Intent details */}
         {intent && (
           <div style={{
             background: "var(--surface-2)",
             border: "1px solid var(--border)",
-            borderRadius: "6px",
-            padding: "12px 16px",
+            borderRadius: "var(--radius-md)",
+            padding: "14px 16px",
             display: "flex",
             flexDirection: "column",
-            gap: "6px",
+            gap: "8px",
           }}>
-            <InfoRow label="Vendor"  value={String(intent.vendorName ?? "—")} />
-            <InfoRow label="Item"    value={String(intent.itemDescription ?? "—")} />
-            <InfoRow label="Qty"     value={String(intent.quantity ?? "—")} />
+            <InfoRow label="Vendor" value={String(intent.vendorName ?? "—")} />
+            <InfoRow label="Item"   value={String(intent.itemDescription ?? "—")} />
+            <InfoRow label="Qty"    value={String(intent.quantity ?? "—")} />
+            <div style={{ height: "1px", background: "var(--border)", margin: "2px 0" }} />
             <InfoRow
               label="Total"
               value={`$${Number(intent.totalAmountUsd ?? 0).toLocaleString()} USDC`}
@@ -60,20 +85,22 @@ export function ApprovalModal({ run, onApprove, onReject }: Props) {
           </div>
         )}
 
+        {/* Agent summary */}
         {proof?.agentSummary != null && (
           <div style={{
             background: "var(--surface-2)",
             border: "1px solid var(--border)",
-            borderRadius: "4px",
-            padding: "10px 12px",
+            borderRadius: "var(--radius-md)",
+            padding: "11px 14px",
             fontSize: "12px",
-            color: "#aaa",
-            lineHeight: 1.6,
+            color: "var(--text-2)",
+            lineHeight: 1.65,
           }}>
             {String(proof.agentSummary)}
           </div>
         )}
 
+        {/* Actions */}
         <div style={{ display: "flex", gap: "10px" }}>
           <button
             onClick={onApprove}
@@ -82,12 +109,22 @@ export function ApprovalModal({ run, onApprove, onReject }: Props) {
               background: "var(--green)",
               color: "#fff",
               border: "none",
-              borderRadius: "6px",
-              padding: "10px",
+              borderRadius: "var(--radius-md)",
+              padding: "11px",
               fontSize: "13px",
               fontWeight: 600,
               cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+              transition: "opacity 0.15s, transform 0.1s",
+              letterSpacing: "-0.01em",
             }}
+            onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.98)"; }}
+            onMouseUp={(e)   => { e.currentTarget.style.transform = "scale(1)"; }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.9"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
           >
             ✓ Approve Payment
           </button>
@@ -95,14 +132,30 @@ export function ApprovalModal({ run, onApprove, onReject }: Props) {
             onClick={onReject}
             style={{
               flex: 1,
-              background: "transparent",
+              background: "var(--red-fill)",
               color: "var(--red)",
-              border: "1px solid var(--red)",
-              borderRadius: "6px",
-              padding: "10px",
+              border: "1px solid rgba(204,85,85,0.3)",
+              borderRadius: "var(--radius-md)",
+              padding: "11px",
               fontSize: "13px",
               fontWeight: 600,
               cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+              transition: "background 0.15s, border-color 0.15s, transform 0.1s",
+              letterSpacing: "-0.01em",
+            }}
+            onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.98)"; }}
+            onMouseUp={(e)   => { e.currentTarget.style.transform = "scale(1)"; }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(204,85,85,0.18)";
+              e.currentTarget.style.borderColor = "rgba(204,85,85,0.5)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "var(--red-fill)";
+              e.currentTarget.style.borderColor = "rgba(204,85,85,0.3)";
             }}
           >
             ✗ Reject
@@ -115,9 +168,14 @@ export function ApprovalModal({ run, onApprove, onReject }: Props) {
 
 function InfoRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", gap: "16px" }}>
-      <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>{label}</span>
-      <span style={{ fontSize: "13px", fontWeight: bold ? 700 : 400, color: bold ? "#fff" : "var(--text)" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", gap: "16px", alignItems: "baseline" }}>
+      <span style={{ fontSize: "12px", color: "var(--text-muted)", flexShrink: 0 }}>{label}</span>
+      <span style={{
+        fontSize: "13px",
+        fontWeight: bold ? 700 : 450,
+        color: bold ? "var(--text)" : "var(--text-2)",
+        textAlign: "right",
+      }}>
         {value}
       </span>
     </div>
