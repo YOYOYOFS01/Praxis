@@ -150,25 +150,25 @@ export default function Dashboard() {
 
         {run && (
           <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {run.quoteJson && (
+            {!!run.quoteJson && (
               <VendorQuoteCard quote={run.quoteJson as Record<string, unknown>} />
             )}
-            {(run.budgetJson || run.policyJson) && (
+            {!!(run.budgetJson || run.policyJson) && (
               <PolicyCheckCard
                 budget={run.budgetJson as Record<string, unknown> | undefined}
                 policy={run.policyJson as Record<string, unknown> | undefined}
               />
             )}
-            {run.proofJson && (
+            {!!run.proofJson && (
               <ProofViewer
                 proof={run.proofJson as Record<string, unknown>}
                 proofHash={run.proofHash as string}
               />
             )}
-            {run.receiptJson && (
+            {!!run.receiptJson && (
               <PaymentCard receipt={run.receiptJson as Record<string, unknown>} />
             )}
-            {run.chainAnchorJson && (
+            {!!run.chainAnchorJson && (
               <ChainAnchorCard anchor={run.chainAnchorJson as Record<string, unknown>} />
             )}
           </div>
