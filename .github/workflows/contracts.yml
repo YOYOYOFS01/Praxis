@@ -1,0 +1,36 @@
+name: Contracts
+
+on:
+  push:
+    paths:
+      - "contracts/**"
+      - "hardhat.config.ts"
+  pull_request:
+    paths:
+      - "contracts/**"
+      - "hardhat.config.ts"
+
+jobs:
+  compile:
+    name: Compile Contracts
+    runs-on: ubuntu-latest
+
+    env:
+      BASE_SEPOLIA_RPC_URL: "https://sepolia.base.org"
+      BASESCAN_API_KEY: "placeholder"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile Solidity contracts
+        run: npx hardhat compile

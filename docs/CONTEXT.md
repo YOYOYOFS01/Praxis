@@ -1,15 +1,20 @@
 # Praxis MVP — Complete Project Context
 
-> **Purpose:** Drop this file into any IDE at the start of a session. It gives the AI complete context of what has been built, what works, what is pending, and how every file connects. No need to re-explore the codebase.
+> **Purpose:** Drop this file into any IDE at the start of a session. It gives the AI complete context of what has been built, what works, what is planned (see ROADMAP.md), and how every file connects.
 >
-> **Last updated:** 2026-07-20
+> **Last updated:** 2026-07-21
 > **Build status:** ✅ `npx tsc --noEmit` — zero errors · ✅ `npx next build` — clean · ✅ DB migrated · ✅ Seeded
+> **Roadmap:** See `ROADMAP.md` for the complete feature specification including user auth, wallet connect, PIN/re-auth, CAPTCHA, rate limiting, invoices, notifications, and more.
 
 ---
 
 ## What Praxis Is
 
-Praxis is an **autonomous agent payment firewall**. An AI agent submits a procurement request in plain English. The system parses it, runs deterministic budget + policy guards, builds a cryptographic Proof-of-Reasoning, validates it through a payment firewall, executes a payment, and anchors the proof hash on Base Sepolia.
+Praxis is an **autonomous agent payment firewall** — a blockchain payment gateway with multi-tenant management, deterministic guards, proof-of-reasoning, and on-chain proof anchoring. An AI agent (or user) submits a procurement request. The system runs budget + policy guards, builds a cryptographic Proof-of-Reasoning, validates via payment firewall, executes payment, and anchors the proof hash on Base Sepolia.
+
+**Current stage:** MVP core complete (agent workflow, guards, proofs, mock/x402 payments, chain anchor, multi-tenant API key auth, admin API, basic dashboard UI).
+
+**Next stage:** See `ROADMAP.md` — add user auth (login/signup/2FA), wallet connect (RainbowKit + wagmi), wallet re-auth with PIN (banking-style lock), transaction history UI, invoice system with webhooks, notifications, send/receive UI, token balances, DeFi swap, admin dashboard UI, and more.
 
 **Core security principle:** LLM proposes → Workflow structures → Guards validate → Firewall approves → Wallet signs → Blockchain anchors. The LLM never directly authorises a payment.
 
@@ -41,250 +46,310 @@ npm run dev                  # http://localhost:3000
 | Validation | Zod v3 |
 | Language | TypeScript 5 (strict mode) |
 
+**Planned additions (see ROADMAP.md):**
+
+| Layer | Library | Purpose |
+|---|---|---|
+| Wallet connect | `@rainbow-me/rainbowkit`, `wagmi`, `@tanstack/react-query` | Browser wallet integration |
+| CAPTCHA | `@marsidev/react-turnstile` | Cloudflare Turnstile on auth + wallet re-auth |
+| Swap | 1inch API | Token swap aggregation |
+| Streaming | Superfluid or Sablier v2 | Streaming payments |
+| Email | Resend or Nodemailer | Notification emails |
+| Auth | bcrypt + custom session | User login/signup |
+
 ---
 
 ## Environment Variables
 
 **Never put real values in CONTEXT.md.** See `.env.example` for the full annotated list.
 
-Key mode flags (the only ones needed for demo):
+**Currently active mode flags:**
 
 | Variable | Default | Effect |
 |---|---|---|
 | `PAYMENT_MODE` | `mock` | `mock` \| `hybrid` \| `x402` |
 | `CHAIN_MODE` | `mock` | `mock` \| `local` \| `base-sepolia` |
-| `MOCK_AGENTS` | `true` | Skip LLM entirely — full pipeline runs without any API key |
-| `HITL_THRESHOLD_USDC` | `0` | `0` = auto-approve all; `>0` pauses for human approval |
-| `API_SECRET_KEY` | _(empty)_ | Empty = auth disabled locally. Always set in production. |
+| `MOCK_AGENTS` | `true` | Skip LLM entirely |
+| `HITL_THRESHOLD_USDC` | `0` | `0` = auto-approve; `>0` = pause for human |
+| `API_SECRET_KEY` | _(empty)_ | Empty = auth disabled locally |
 | `AGENT_MAX_PAYMENT_USDC` | `50000` | Global fallback single-payment ceiling |
-| `TENANT_DAILY_BUDGET_USD` | `500000` | Global fallback daily spend ceiling |
+| `TENANT_DAILY_BUDGET_USD` | `500000` | Global fallback daily budget |
 
-Per-tenant limits override the global env vars via `PolicyConfig` in the DB.
+**To add when building ROADMAP features:**
+
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile — client-side widget |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile — server-side verify |
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | WalletConnect / RainbowKit |
+| `BASE_RPC_URL` | Base Mainnet RPC |
+| `RESEND_API_KEY` | Email notifications |
+| `ONEINCH_API_KEY` | Swap aggregation |
+
+Per-tenant limits override global env vars via `PolicyConfig` in the DB.
 
 ---
 
 ## Complete File Map
 
+### Currently Built
+
 ```
 praxis-mvp/
 │
-├── middleware.ts                    ← Security headers (CSP, HSTS, nosniff, X-Frame) + CORS on every response
-├── next.config.mjs                  ← Next.js 14 config (excludes contracts/hardhat from build)
-├── tsconfig.json                    ← Excludes contracts/ and hardhat.config.ts
+├── middleware.ts                    ← Security headers (CSP, HSTS, nosniff, X-Frame) + CORS
+├── next.config.mjs                  ← Next.js 14 config
 ├── hardhat.config.ts                ← Hardhat config (excluded from tsc/Next.js)
 │
 ├── app/
-│   ├── layout.tsx                   ← Root layout
-│   ├── globals.css                  ← CSS variables, dark theme
+│   ├── layout.tsx                   ← Root layout (Google Fonts preconnect)
+│   ├── globals.css                  ← CSS variables, dark theme, Inter font, animations
 │   ├── page.tsx                     ← 2-panel dashboard (chat left, cards right)
 │   └── api/
-│       │
-│       ├── purchase/route.ts        ← POST /api/purchase
-│       │                               Auth: run:create · Rate: 10/min
-│       │                               Passes tenantId from resolved API key to workflow
-│       │
-│       ├── runs/route.ts            ← GET  /api/runs
-│       │                               Auth: run:read · Rate: 30/min
-│       │
-│       ├── runs/[runId]/route.ts    ← GET  /api/runs/:id
-│       │                               Auth: run:read · Rate: 60/min
-│       │
-│       ├── runs/[runId]/approve/route.ts  ← POST /api/runs/:id/approve
-│       │                               Auth: run:approve · Rate: 5/min
-│       │                               Writes AuditLog entry on approve/reject
-│       │
-│       ├── vendor/quote/route.ts    ← GET  /api/vendor/quote  (no auth)
+│       ├── purchase/route.ts        ← POST /api/purchase · Auth: run:create · Rate: 10/min
+│       ├── runs/route.ts            ← GET /api/runs · Auth: run:read · Rate: 30/min
+│       ├── runs/[runId]/route.ts    ← GET /api/runs/:id · Auth: run:read · Rate: 60/min
+│       ├── runs/[runId]/approve/route.ts ← POST /api/runs/:id/approve · Auth: run:approve · Rate: 5/min
+│       ├── vendor/quote/route.ts    ← GET /api/vendor/quote (no auth)
 │       ├── vendor/protected-data/route.ts ← GET (x402 protected)
-│       │
 │       └── admin/
-│           ├── tenants/route.ts                           ← GET/POST tenants
-│           ├── tenants/[tenantId]/keys/route.ts           ← GET/POST API keys
-│           ├── tenants/[tenantId]/keys/[keyId]/route.ts   ← GET/DELETE key
-│           ├── tenants/[tenantId]/policy/route.ts         ← GET/PATCH policy limits
-│           ├── tenants/[tenantId]/vendors/route.ts        ← GET/POST vendor allowlist
-│           ├── tenants/[tenantId]/vendors/[vendorId]/route.ts ← PATCH/DELETE vendor
-│           └── audit/route.ts                            ← GET audit log (paginated)
+│           ├── tenants/route.ts
+│           ├── tenants/[tenantId]/keys/route.ts
+│           ├── tenants/[tenantId]/keys/[keyId]/route.ts
+│           ├── tenants/[tenantId]/policy/route.ts
+│           ├── tenants/[tenantId]/vendors/route.ts
+│           ├── tenants/[tenantId]/vendors/[vendorId]/route.ts
+│           └── audit/route.ts
 │
 ├── components/
 │   ├── chat-panel.tsx               ← Prompt input + example buttons
-│   ├── workflow-timeline.tsx        ← Left panel: event list with status icons
-│   ├── vendor-quote-card.tsx        ← Quote display + shared Card/Row primitives
-│   ├── policy-check-card.tsx        ← Budget + policy guard results
-│   ├── proof-viewer.tsx             ← Agent summary + proof hash + raw JSON toggle
-│   ├── payment-card.tsx             ← Payment receipt (mode badge, tx hash)
-│   ├── chain-anchor-card.tsx        ← Chain anchor + BaseScan link
-│   ├── approval-modal.tsx           ← HITL overlay: shows intent, approve/reject
-│   └── demo-mode-badge.tsx          ← Top-right badge showing PAYMENT_MODE/CHAIN_MODE
+│   ├── workflow-timeline.tsx        ← Event list with status icons + type badges
+│   ├── vendor-quote-card.tsx        ← Quote display + shared Card/Row/Divider primitives
+│   ├── policy-check-card.tsx        ← Budget + policy guard results with GuardHeader
+│   ├── proof-viewer.tsx             ← Agent summary + proof hash + collapsible raw JSON
+│   ├── payment-card.tsx             ← Payment receipt (mode badge, settled indicator)
+│   ├── chain-anchor-card.tsx        ← Chain anchor + hover BaseScan link
+│   ├── approval-modal.tsx           ← HITL overlay: intent + summary + approve/reject
+│   └── demo-mode-badge.tsx          ← Mode badge with pulsing dot indicator
+│
+├── docs/
+│   ├── CONTEXT.md                   ← This file
+│   └── ROADMAP.md                   ← Complete feature specification for everything to build
 │
 ├── contracts/
-│   ├── PraxisPaymentRegistry.sol    ← PRODUCTION-READY. See contracts section below.
-│   ├── PraxisDeferredEscrow.sol     ← STRETCH. See contracts section below.
-│   └── deploy.ts                    ← Hardhat deploy script → writes to src/blockchain/deployments.ts
+│   ├── PraxisPaymentRegistry.sol    ← Production-ready. Ready to deploy.
+│   ├── PraxisDeferredEscrow.sol     ← Stretch. Ready to deploy.
+│   └── deploy.ts                    ← Hardhat deploy → writes to src/blockchain/deployments.ts
 │
 ├── prisma/
-│   ├── schema.prisma                ← 7 models. See DB schema section below.
-│   ├── seed.ts                      ← 3 demo runs: completed, awaiting_approval, failed
-│   ├── dev.db                       ← SQLite database (gitignored)
-│   └── migrations/                  ← Auto-generated. Two migrations applied.
+│   ├── schema.prisma                ← 7 models (see DB Schema section)
+│   ├── seed.ts                      ← 3 demo runs
+│   └── migrations/                  ← Two migrations applied
 │
 └── src/
     ├── types/
-    │   ├── purchase.ts              ← PurchaseIntent, VendorQuote
-    │   ├── proof.ts                 ← ProofOfReasoning, BudgetDecision, PolicyDecision, ProofHash
-    │   ├── payment.ts               ← PaymentIntent, PaymentReceipt, ChainAnchor
-    │   └── run.ts                   ← RunStatus, EventType, EventStatus, RunEventInput
+    │   ├── purchase.ts, proof.ts, payment.ts, run.ts
     │
-    ├── db/prisma.ts                 ← Prisma singleton (globalThis pattern for HMR)
-    │
+    ├── db/prisma.ts                 ← Prisma singleton
     ├── store/run-store.ts           ← All Run/RunEvent DB ops. JSON↔String serialisation.
-    │                                   create(runId, prompt, tenantId?) ← now tenant-aware
     │
     ├── policy/
     │   ├── budget-guard.ts          ← async runBudgetGuard(intent, tenantId?)
-    │   │                               Reads PolicyConfig from DB when tenantId present.
-    │   │                               Falls back to AGENT_MAX_PAYMENT_USDC env var.
     │   └── policy-guard.ts          ← async runPolicyGuard(intent, quote, tenantId?)
-    │                                   Reads VendorAllowlist from DB when tenantId present.
-    │                                   Enforces per-vendor paymentAddress lock + maxOrderUsdc cap.
-    │                                   Falls back to hardcoded GLOBAL_APPROVED_VENDORS list.
     │
-    ├── proof/hash-proof.ts          ← hashProof(): canonical JSON (sorted keys) → SHA-256 → 0x hex
+    ├── proof/hash-proof.ts          ← SHA-256 canonical proof hash
     │
     ├── payment/
-    │   ├── payment-firewall.ts      ← Deterministic gate. 5 checks: runId, both guards, amount, payee.
-    │   ├── payment-executor.ts      ← Entry point. Reads PAYMENT_MODE → mock|hybrid|x402.
-    │   ├── mock-payment.ts          ← Returns realistic mock receipt.
-    │   └── x402-client.ts           ← x402 call with 6s timeout → hybrid fallback on failure.
+    │   ├── payment-firewall.ts      ← 5-check deterministic gate
+    │   ├── payment-executor.ts      ← Entry point — reads PAYMENT_MODE
+    │   ├── mock-payment.ts
+    │   └── x402-client.ts           ← x402 with 6s timeout → hybrid fallback
     │
     ├── blockchain/
-    │   ├── registry-client.ts       ← anchorPayment(). 8s RPC timeout → mock fallback.
-    │   ├── registry-abi.ts          ← Full ABI for PraxisPaymentRegistry (updated with chainId param).
-    │   └── deployments.ts           ← Written by deploy.ts. Contract addresses per network.
+    │   ├── registry-client.ts       ← anchorPayment() — 8s timeout → mock fallback
+    │   ├── registry-abi.ts
+    │   └── deployments.ts
     │
     ├── lib/security/
-    │   ├── api-keys.ts              ← Key generation, hashing, CRUD, resolveApiKey().
-    │   │                               Format: prx_live_<32hex> or prx_test_<32hex>
-    │   │                               Stores SHA-256 hash only — raw key shown once.
-    │   ├── api-auth.ts              ← requireAuth(req, scope) — DB-backed, scope-enforced.
-    │   │                               Fallback chain: DB key → env API_SECRET_KEY → disabled.
-    │   ├── rate-limiter.ts          ← In-memory sliding window per IP/bucket.
-    │   ├── sanitize.ts              ← sanitizePrompt (500 char), sanitizeItem, parseApprovedField.
-    │   └── logger.ts                ← Structured logger. Redacts secrets. Sanitises errors in prod.
+    │   ├── api-keys.ts              ← Key generation, hashing, CRUD
+    │   ├── api-auth.ts              ← requireAuth(req, scope) — DB-backed
+    │   ├── rate-limiter.ts          ← In-memory sliding window (API routes only)
+    │   ├── sanitize.ts
+    │   └── logger.ts
     │
     └── mastra/
-        ├── index.ts                 ← new Mastra({ agents }). initializeActivityStreaming() wraps all tools.
-        ├── lib/
-        │   ├── models.ts            ← resolveModel(requestContext). Default: gpt-4o-mini.
-        │   └── activity-stream.ts   ← emitActivity() + activityResult(). Real-time UI events.
-        ├── agents/
-        │   ├── procurement-agent.ts ← id:"procurement-agent". Tools: fetchVendorQuoteTool.
-        │   ├── guard-agent.ts       ← id:"guard-agent". Tools: runBudgetGuardTool + runPolicyGuardTool (parallel).
-        │   └── proof-agent.ts       ← id:"proof-agent". Tools: buildProofTool.
-        ├── tools/
-        │   ├── fetch-vendor-quote-tool.ts   ← id:"fetch_vendor_quote"
-        │   ├── run-budget-guard-tool.ts     ← id:"run_budget_guard" — async, passes tenantId
-        │   ├── run-policy-guard-tool.ts     ← id:"run_policy_guard" — async, passes tenantId
-        │   ├── build-proof-tool.ts          ← id:"build_proof_of_reasoning"
-        │   ├── execute-payment-tool.ts      ← id:"execute_payment"
-        │   └── anchor-chain-tool.ts         ← id:"anchor_payment_on_chain"
-        └── workflows/
-            └── purchase-workflow.ts         ← runPurchaseWorkflow(runId, prompt, tenantId?)
-                                                resumePurchaseWorkflow(runId)
+        ├── index.ts
+        ├── lib/models.ts, activity-stream.ts
+        ├── agents/procurement-agent.ts, guard-agent.ts, proof-agent.ts
+        ├── tools/fetch-vendor-quote-tool.ts, run-budget-guard-tool.ts,
+        │        run-policy-guard-tool.ts, build-proof-tool.ts,
+        │        execute-payment-tool.ts, anchor-chain-tool.ts
+        └── workflows/purchase-workflow.ts
 ```
 
 ---
 
-## Database Schema (7 Models)
-
-All JSON stored as `String?` — SQLite has no native JSON type. `run-store.ts` serialises/deserialises transparently.
+### Planned (see ROADMAP.md for full spec)
 
 ```
-Tenant
-  id, name, slug (unique), isActive, createdAt, updatedAt
-  → apiKeys[], runs[], policyConfig?, vendorAllowlist[], auditLogs[]
+app/
+├── login/page.tsx                   ← Login with adaptive CAPTCHA (appears after 3 failures)
+├── signup/page.tsx                  ← Signup with always-on CAPTCHA + password strength meter
+├── profile/page.tsx                 ← Identity, security, wallet PIN, spending controls, sessions
+├── history/page.tsx                 ← Run history with filters, pagination, detail drawer
+├── wallet/reauth/page.tsx           ← PIN pad / password re-auth gate (banking-style)
+├── send/page.tsx                    ← Manual send flow with PIN confirmation
+├── swap/page.tsx                    ← Token swap via 1inch
+├── escrow/page.tsx                  ← Escrow positions
+├── invoices/page.tsx                ← Merchant invoice list + create
+├── pay/[paymentLink]/page.tsx       ← Public invoice payment page
+├── admin/
+│   ├── layout.tsx
+│   ├── tenants/page.tsx
+│   ├── tenants/[tenantId]/page.tsx
+│   ├── tenants/[tenantId]/keys/page.tsx
+│   ├── tenants/[tenantId]/policy/page.tsx
+│   ├── tenants/[tenantId]/vendors/page.tsx
+│   ├── audit/page.tsx
+│   └── analytics/page.tsx
+└── api/
+    ├── auth/signup, login, logout, me, password, forgot-password, reset-password
+    ├── auth/2fa/setup, verify, disable
+    ├── wallet/reauth, pin
+    ├── wallets/, wallets/[id], wallets/challenge, wallets/[id]/balances
+    ├── runs/export, runs/[runId]/stream
+    ├── notifications/, notifications/[id], notifications/stream
+    ├── invoices/, invoices/[id], invoices/[id]/qr
+    ├── contacts/
+    ├── txs/sync
+    ├── admin/tenants/[id]/webhooks
+    ├── admin/analytics/overview, timeseries, vendors
+    ├── admin/compliance/report
+    ├── admin/batches
+    └── cron/balance-check
 
-ApiKey
-  id, tenantId, name
-  keyHash (SHA-256, unique — never the raw key)
-  keyPrefix (first 12 chars for display e.g. "prx_live_xxxx")
-  scopes (comma-separated: run:create,run:read,run:approve,key:manage,...)
-  isActive, expiresAt?, lastUsedAt?, revokedAt?, createdAt
-  → tenant, auditLogs[]
+components/
+├── captcha-widget.tsx               ← Cloudflare Turnstile wrapper
+├── pin-pad.tsx                      ← 6-digit UPI-style PIN pad
+├── confirm-action-modal.tsx         ← Reusable PIN/password confirm modal
+├── wallet-connect-button.tsx        ← RainbowKit styled button
+├── wallet-manager.tsx               ← Linked wallets list
+├── wallet-balance-card.tsx          ← Token balances
+├── address-display.tsx              ← Truncated address + copy + BaseScan
+├── network-badge.tsx                ← Chain switcher
+├── run-history-table.tsx            ← Virtualized run list
+├── run-detail-drawer.tsx            ← Right slide-over run detail
+├── notification-bell.tsx            ← Header bell + dropdown
+├── invoice-card.tsx
+├── create-invoice-modal.tsx
+├── receive-modal.tsx
+├── address-book.tsx
+├── token-selector.tsx
+├── token-import-modal.tsx
+└── approvals-manager.tsx
 
-PolicyConfig (1:1 with Tenant)
-  tenantId (unique)
-  maxSinglePaymentUsdc  (default 50,000)
-  dailyBudgetUsd        (default 500,000)
-  hitlThresholdUsdc     (default 0 = auto-approve)
-  requireProofForAll    (default true)
-  allowMockPayments     (default true)
-  createdAt, updatedAt
+src/
+├── lib/
+│   ├── auth/session.ts, password.ts, totp.ts, wallet-session.ts, action-auth.ts
+│   ├── security/captcha.ts, auth-rate-limiter.ts, address-screening.ts, rate-limiter-db.ts
+│   ├── wagmi/config.ts
+│   ├── tokens/registry.ts, balances.ts
+│   ├── prices/feed.ts
+│   ├── gas/estimate.ts
+│   ├── ens/resolve.ts
+│   ├── tx/simulate.ts
+│   ├── swap/oneinch.ts, slippage.ts
+│   ├── chains/registry.ts
+│   ├── webhooks/deliver.ts
+│   ├── notifications/create.ts, email.ts, balance-monitor.ts
+│   └── compliance/kyc-check.ts
+├── payment/usdc-transfer.ts, streaming.ts
+├── blockchain/escrow-client.ts
+├── proof/merkle-batch.ts
+└── policy/user-spending-guard.ts
+---
 
-VendorAllowlist
-  id, tenantId, vendorName (lowercase), paymentAddress?, maxOrderUsdc?
-  isActive, createdAt
-  @@unique([tenantId, vendorName])
+## Database Schema
 
-Run
-  id, tenantId?, apiKeyId?, status, prompt
-  intentJson, quoteJson, budgetJson, policyJson
-  proofJson, proofHash, paymentJson, receiptJson
-  protectedJson, chainAnchorJson
-  createdAt, updatedAt
-  → tenant?, events[]
+### Currently Built — 7 Models
 
-RunEvent
-  id, runId, type, label, status, payload?, createdAt
-  type:   workflow | guard | proof | payment | chain | hitl
-  status: pending | success | failed | rejected
+All JSON stored as `String?` — SQLite has no native JSON type. `run-store.ts` handles serialisation.
 
-AuditLog (append-only, never deleted)
-  id, tenantId?, apiKeyId?
-  action     (run.create, run.approve, run.reject, key.create, key.revoke, policy.update, vendor.add, vendor.remove)
-  actorType  (api_key | system | human)
-  resourceId?, metadata? (JSON string, sanitised), ipAddress?, createdAt
+```
+Tenant          id, name, slug (unique), isActive, createdAt, updatedAt
+
+ApiKey          id, tenantId, name, keyHash (SHA-256 unique), keyPrefix
+                scopes (comma-sep), isActive, expiresAt?, lastUsedAt?, revokedAt?
+
+PolicyConfig    tenantId (unique 1:1), maxSinglePaymentUsdc (50k), dailyBudgetUsd (500k)
+                hitlThresholdUsdc (0=auto), requireProofForAll, allowMockPayments
+
+VendorAllowlist id, tenantId, vendorName (lowercase), paymentAddress?, maxOrderUsdc?
+                @@unique([tenantId, vendorName])
+
+Run             id, tenantId?, apiKeyId?, status, prompt
+                intentJson, quoteJson, budgetJson, policyJson
+                proofJson, proofHash, paymentJson, receiptJson, chainAnchorJson
+                createdAt, updatedAt → events[]
+
+RunEvent        id, runId, type, label, status, payload?, createdAt
+                type: workflow|guard|proof|payment|chain|hitl
+
+AuditLog        id, tenantId?, apiKeyId?, action, actorType (api_key|system|human)
+                resourceId?, metadata? (JSON sanitised), ipAddress?, createdAt
+                APPEND-ONLY
+```
+
+### Planned Models — Future Migrations (see ROADMAP.md)
+
+```
+User            email (unique), passwordHash (bcrypt 12), role (user|admin)
+                walletPin? (bcrypt), totpSecret?, totpEnabled, backupCodes?
+
+Session         userId, token (SHA-256 unique), expiresAt, ipAddress?, userAgent?
+
+AuthRateLimit   key (unique), attempts, windowStart, lockedUntil?
+
+SpendingLimit   userId (unique), dailyLimitUsdc, perTxLimitUsdc, requireApprovalAboveUsdc
+
+Wallet          userId, address (checksummed), chainId, walletType, isDefault
+
+Invoice         tenantId, description, amountUsdc, payToAddress
+                status (pending|paid|expired|cancelled), paymentLink (unique)
+
+WebhookEndpoint tenantId, url, secret (HMAC encrypted), events, isActive
+
+WebhookDelivery endpointId, event, payload, responseStatus?, attemptCount, nextRetryAt?
+
+Notification    userId, type, title, body, metadata?, isRead, readAt?
+
+Contact         userId, label, address, chainId? · @@unique([userId, address])
+
+PendingTx       userId, txHash (unique), chainId, type, status, nonce
+
+StreamingPayment tenantId, payerAddress, payeeAddress, tokenAddress, ratePerSecond, status
+
+MerkleBatch     merkleRoot (unique), anchorTxHash?, chainId, runIds (JSON), proofHashes (JSON)
 ```
 
 ---
 
-## API Key System
+## API Key System (M2M Auth)
 
-**Key format:** `prx_live_<32 random hex>` or `prx_test_<32 random hex>`
+**Format:** `prx_live_<32 hex>` or `prx_test_<32 hex>` — raw shown **once**, DB stores SHA-256 only.
 
-**Security:**
-- Raw key generated with `crypto.randomBytes(32)` — shown **once** at creation, never stored
-- DB stores `SHA-256(rawKey)` only
-- `resolveApiKey(rawKey)` hashes the incoming token and does a DB lookup
-- Checks: `isActive`, `revokedAt`, `expiresAt`, `tenant.isActive` — all must pass
+**Scopes:** `run:create` · `run:read` · `run:approve` · `key:manage` · `policy:read/write` · `vendor:read/write`
 
-**Scopes:**
-| Scope | Used by |
-|---|---|
-| `run:create` | `POST /api/purchase` |
-| `run:read` | `GET /api/runs`, `GET /api/runs/:id` |
-| `run:approve` | `POST /api/runs/:id/approve` |
-| `key:manage` | All `/api/admin/` routes |
-| `policy:read` | `GET /api/admin/tenants/:id/policy` |
-| `policy:write` | `PATCH /api/admin/tenants/:id/policy` |
-| `vendor:read` | `GET /api/admin/tenants/:id/vendors` |
-| `vendor:write` | `POST/PATCH/DELETE /api/admin/tenants/:id/vendors` |
+**Fallback chain:** DB key lookup → `API_SECRET_KEY` env var → auth disabled
 
-**Auth fallback chain:**
-1. DB key lookup (hashed bearer token)
-2. `API_SECRET_KEY` env var (single-key demo fallback)
-3. Auth fully disabled (no key in DB, no env var set)
-
-**Create a tenant + key (curl example):**
 ```bash
-# Create tenant (auth disabled locally)
+# Create tenant + key (auth disabled locally)
 curl -X POST http://localhost:3000/api/admin/tenants \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Acme Corp","slug":"acme-corp"}'
+  -H "Content-Type: application/json" -d '{"name":"Acme","slug":"acme"}'
 
-# Create API key — copy the "key" field immediately, it will not be shown again
-curl -X POST http://localhost:3000/api/admin/tenants/<tenantId>/keys \
+curl -X POST http://localhost:3000/api/admin/tenants/<id>/keys \
   -H "Content-Type: application/json" \
-  -d '{"name":"Dashboard key","scopes":["run:create","run:read","run:approve"]}'
+  -d '{"name":"CI key","scopes":["run:create","run:read","run:approve"]}'
 ```
 
 ---

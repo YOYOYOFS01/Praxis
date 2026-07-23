@@ -1,0 +1,395 @@
+<!DOCTYPE html><html lang="en" class="light"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">try{
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed-dim": "#c9c6c5",
+                    "primary-fixed": "#e5e2e1",
+                    "secondary": "#5e5e5e",
+                    "on-tertiary-fixed-variant": "#464747",
+                    "on-primary": "#ffffff",
+                    "on-secondary-container": "#646464",
+                    "primary-container": "#1c1b1b",
+                    "on-background": "#1a1c1b",
+                    "inverse-primary": "#c9c6c5",
+                    "on-surface": "#1a1c1b",
+                    "warning": "#D97706",
+                    "outline": "#747878",
+                    "surface-variant": "#e3e2e0",
+                    "secondary-container": "#e3e2e2",
+                    "inverse-surface": "#2f3130",
+                    "wallet-locked": "#991B1B",
+                    "on-error-container": "#93000a",
+                    "surface-container-highest": "#e3e2e0",
+                    "surface-tint": "#5f5e5e",
+                    "tertiary": "#000000",
+                    "outline-variant": "#c4c7c7",
+                    "background": "#faf9f7",
+                    "primary": "#000000",
+                    "on-primary-container": "#858383",
+                    "surface": "#faf9f7",
+                    "tertiary-container": "#1a1c1c",
+                    "background-light": "#F9F8F6",
+                    "error-container": "#ffdad6",
+                    "surface-container": "#efeeec",
+                    "on-secondary": "#ffffff",
+                    "surface-dim": "#dadad8",
+                    "surface-bright": "#faf9f7",
+                    "session-orange": "#EA580C",
+                    "secondary-fixed-dim": "#c7c6c6",
+                    "pending": "#2563EB",
+                    "on-tertiary-container": "#838484",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed": "#1b1c1c",
+                    "surface-container-high": "#e9e8e6",
+                    "success": "#16A34A",
+                    "secondary-fixed": "#e3e2e2",
+                    "captcha-amber": "#F59E0B",
+                    "on-surface-variant": "#444748",
+                    "on-tertiary-fixed": "#1a1c1c",
+                    "surface-container-low": "#f4f3f1",
+                    "error": "#DC2626",
+                    "on-secondary-fixed-variant": "#464747",
+                    "on-primary-fixed": "#1c1b1b",
+                    "background-dark": "#0A0A0A",
+                    "on-tertiary": "#ffffff",
+                    "wallet-unlocked": "#166534",
+                    "on-primary-fixed-variant": "#474646",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed-dim": "#c7c6c6",
+                    "inverse-on-surface": "#f1f1ef",
+                    "tertiary-fixed": "#e3e2e2"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "sm": "8px",
+                    "md": "16px",
+                    "xxl": "48px",
+                    "drawer-width": "420px",
+                    "sidebar-collapsed": "72px",
+                    "xs": "4px",
+                    "lg": "24px",
+                    "xl": "40px",
+                    "sidebar-expanded": "260px"
+            },
+            "fontFamily": {
+                    "page-title": ["Inter"],
+                    "technical-data": ["JetBrains Mono"],
+                    "section-title": ["Inter"],
+                    "status": ["Inter"],
+                    "button-label": ["Inter"],
+                    "caption": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "body": ["Inter"],
+                    "card-title": ["Inter"],
+                    "display": ["Inter"]
+            },
+            "fontSize": {
+                    "page-title": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "technical-data": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "section-title": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "status": ["11px", {"lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "button-label": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "body": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "card-title": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "display": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    }catch(_e){}</script></head><body class="flex min-h-screen overflow-x-hidden">
+
+    <!-- SideNavBar (Shared Component) -->
+    <aside class="fixed left-0 top-0 h-screen w-sidebar-expanded bg-surface-container flex flex-col h-full py-lg px-md gap-md shadow-sm z-50">
+        <div class="flex items-center gap-md mb-xl">
+            <div class="w-10 h-10 bg-primary flex items-center justify-center rounded-lg">
+                <span class="material-symbols-outlined text-on-primary">token</span>
+            </div>
+            <div>
+                <h1 class="font-section-title text-section-title font-bold text-primary leading-tight">Praxis Finance</h1>
+                <p class="font-caption text-caption text-on-surface-variant">Enterprise Vault</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 flex flex-col gap-xs">
+            <a href="{{DATA:SCREEN:SCREEN_6}}" class="flex items-center gap-md p-md font-button-label text-button-label transition-all hover:bg-surface-variant text-on-surface-variant active:scale-[0.98]">
+                <span class="material-symbols-outlined" data-original-icon="dashboard">dashboard</span> Dashboard
+            </a>
+            <a href="{{DATA:SCREEN:SCREEN_5}}" class="flex items-center gap-md p-md font-button-label text-button-label transition-all bg-primary text-on-primary rounded-lg active:scale-[0.98]">
+                <span class="material-symbols-outlined" data-original-icon="account_balance_wallet">account_balance_wallet</span> Wallet
+            </a>
+            <a href="{{DATA:SCREEN:SCREEN_4}}" class="flex items-center gap-md p-md font-button-label text-button-label transition-all hover:bg-surface-variant text-on-surface-variant active:scale-[0.98]">
+                <span class="material-symbols-outlined" data-original-icon="payments">payments</span> Payments
+            </a>
+            <a href="{{DATA:SCREEN:SCREEN_2}}" class="flex items-center gap-md p-md font-button-label text-button-label transition-all hover:bg-surface-variant text-on-surface-variant active:scale-[0.98]">
+                <span class="material-symbols-outlined">storefront</span> Merchant
+            </a>
+            <a href="#" class="flex items-center gap-md p-md font-button-label text-button-label transition-all hover:bg-surface-variant text-on-surface-variant active:scale-[0.98]">
+                <span class="material-symbols-outlined">history</span> History
+            </a>
+            <a href="#" class="flex items-center gap-md p-md font-button-label text-button-label transition-all hover:bg-surface-variant text-on-surface-variant active:scale-[0.98]">
+                <span class="material-symbols-outlined">analytics</span> Analytics
+            </a>
+        </nav>
+
+        <div class="mt-auto flex flex-col gap-xs">
+            <a href="{{DATA:SCREEN:SCREEN_4}}" class="block text-center w-full py-md mb-md bg-primary text-on-primary font-button-label text-button-label rounded-lg active:scale-95 transition-transform">New Transaction</a>
+            <a href="#" class="flex items-center gap-md p-md font-button-label text-button-label transition-all hover:bg-surface-variant text-on-surface-variant">
+                <span class="material-symbols-outlined">shield_lock</span> Security
+            </a>
+            <a href="#" class="flex items-center gap-md p-md font-button-label text-button-label transition-all hover:bg-surface-variant text-on-surface-variant">
+                <span class="material-symbols-outlined">description</span> Docs
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-sidebar-expanded flex-1 min-w-0">
+        <!-- TopNavBar (Shared Component) -->
+        <header class="flex justify-between items-center px-lg w-full sticky top-0 z-40 bg-surface h-16 border-b border-outline-variant">
+            <div class="flex items-center gap-lg">
+                <div class="relative flex items-center">
+                    <span class="material-symbols-outlined absolute left-3 text-secondary">search</span>
+                    <input type="text" placeholder="Search assets or tx..." class="pl-10 pr-4 py-2 bg-surface-container rounded-full border-none focus:ring-1 focus:ring-primary text-body font-body w-64">
+                </div>
+            </div>
+            <div class="flex items-center gap-lg">
+                <div class="hidden md:flex gap-md">
+                    <a href="#" class="font-body text-body text-secondary hover:text-primary transition-colors">Network Status</a>
+                    <a href="#" class="font-body text-body text-secondary hover:text-primary transition-colors">Support</a>
+                </div>
+                <div class="h-6 w-px bg-outline-variant mx-2"></div>
+                <div class="flex items-center gap-md">
+                    <button class="material-symbols-outlined text-secondary hover:text-primary transition-colors">notifications</button>
+                    <button class="material-symbols-outlined text-secondary hover:text-primary transition-colors">settings</button>
+                </div>
+                <button class="flex items-center gap-sm bg-primary text-on-primary px-4 py-2 rounded-full font-button-label text-button-label hover:opacity-90 active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+                    Connect Wallet
+                </button>
+            </div>
+        </header>
+
+        <!-- Content Canvas -->
+        <div class="p-lg md:p-xl max-w-[1400px] mx-auto">
+            
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-xs mb-lg text-secondary font-caption text-caption">
+                <span class="">Enterprise Vault</span>
+                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                <span class="text-primary font-medium">Wallet Overview</span>
+            </nav>
+
+            <!-- Page Title & Quick Actions -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-xl gap-md">
+                <div>
+                    <h2 class="font-page-title text-page-title text-primary mb-xs">Wallet Overview</h2>
+                    <p class="font-body text-body text-on-surface-variant">Real-time consolidated view of your institutional assets.</p>
+                </div>
+                <div class="flex gap-md">
+                    <a href="{{DATA:SCREEN:SCREEN_4}}" class="flex items-center gap-sm px-lg py-3 bg-primary text-on-primary rounded-lg font-button-label text-button-label shadow-sm hover:shadow-md active:scale-[0.98] transition-all"><span class="material-symbols-outlined">send</span> Send</a>
+                    <button class="flex items-center gap-sm px-lg py-3 border border-outline text-primary rounded-lg font-button-label text-button-label hover:bg-surface-container transition-all active:scale-[0.98]">
+                        <span class="material-symbols-outlined">call_received</span> Receive
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bento Grid Layout -->
+            <div class="grid grid-cols-12 gap-lg mb-xl">
+                
+                <!-- Balance Card -->
+                <div class="col-span-12 lg:col-span-7 bg-primary text-on-primary p-lg rounded-xl flex flex-col justify-between relative overflow-hidden group">
+                    <!-- Background Visual Element-->
+                    <div class="absolute -right-12 -top-12 w-64 h-64 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-all duration-700"></div>
+                    
+                    <div>
+                        <div class="flex justify-between items-start mb-xxl">
+                            <div>
+                                <p class="font-caption text-caption text-primary-fixed opacity-70 mb-xs uppercase tracking-wider">Total Portfolio Value</p>
+                                <h3 class="font-display text-display font-bold tracking-tight">$124,500.00</h3>
+                            </div>
+                            <div class="bg-success/20 text-success px-3 py-1 rounded-full flex items-center gap-xs font-status text-status">
+                                <span class="material-symbols-outlined text-[14px]">trending_up</span>
+                                +2.4%
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-lg border-t border-white/10">
+                        <div class="flex gap-xxl">
+                            <div>
+                                <p class="font-caption text-caption text-primary-fixed opacity-70 mb-xs">Available</p>
+                                <p class="font-card-title text-card-title">$89,230.12</p>
+                            </div>
+                            <div>
+                                <p class="font-caption text-caption text-primary-fixed opacity-70 mb-xs">In Vaults</p>
+                                <p class="font-card-title text-card-title">$35,269.88</p>
+                            </div>
+                        </div>
+                        <button class="material-symbols-outlined opacity-50 hover:opacity-100 transition-opacity">info</button>
+                    </div>
+                </div>
+
+                <!-- Wallet Summary Card -->
+                <div class="col-span-12 lg:col-span-5 bg-surface-container rounded-xl p-lg flex flex-col gap-lg border border-outline-variant shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-card-title text-card-title text-primary">Wallet Summary</h4>
+                        <span class="flex items-center gap-xs font-status text-status px-2 py-1 bg-wallet-unlocked/10 text-wallet-unlocked rounded-full">
+                            <span class="w-1.5 h-1.5 bg-wallet-unlocked rounded-full animate-pulse"></span>
+                            CONNECTED
+                        </span>
+                    </div>
+
+                    <div class="space-y-md">
+                        <div>
+                            <p class="font-caption text-caption text-on-surface-variant mb-xs">Address</p>
+                            <div class="flex items-center gap-sm group">
+                                <code class="font-technical-data text-technical-data bg-white px-3 py-2 rounded border border-outline-variant flex-1 truncate">0x71C7656EC7ab88b098defB751B7401B5f6d8976F</code>
+                                <button class="material-symbols-outlined p-2 hover:bg-surface-variant rounded transition-colors text-secondary" title="Copy Address">content_copy</button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-md">
+                            <div class="p-md bg-white rounded border border-outline-variant">
+                                <p class="font-caption text-caption text-on-surface-variant mb-xs">Network</p>
+                                <div class="flex items-center gap-sm">
+                                    <span class="material-symbols-outlined text-primary text-[20px]">hub</span>
+                                    <span class="font-button-label text-button-label text-primary">Ethereum</span>
+                                </div>
+                            </div>
+                            <div class="p-md bg-white rounded border border-outline-variant">
+                                <p class="font-caption text-caption text-on-surface-variant mb-xs">Last Activity</p>
+                                <div class="flex items-center gap-sm">
+                                    <span class="material-symbols-outlined text-secondary text-[20px]">schedule</span>
+                                    <span class="font-button-label text-button-label text-primary">2m ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Token Portfolio Section -->
+            <section class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+                <div class="p-lg border-b border-outline-variant flex justify-between items-center">
+                    <h4 class="font-section-title text-section-title text-primary">Token Portfolio</h4>
+                    <div class="flex items-center gap-md">
+                        <button class="flex items-center gap-xs font-button-label text-button-label text-secondary hover:text-primary">
+                            <span class="material-symbols-outlined text-[18px]">filter_list</span> Filter
+                        </button>
+                        <button class="flex items-center gap-xs font-button-label text-button-label text-secondary hover:text-primary">
+                            <span class="material-symbols-outlined text-[18px]">download</span> Export
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-surface-container-low border-b border-outline-variant">
+                                <th class="px-lg py-md font-button-label text-button-label text-on-surface-variant uppercase tracking-wider">Asset</th>
+                                <th class="px-lg py-md font-button-label text-button-label text-on-surface-variant uppercase tracking-wider text-right">Balance</th>
+                                <th class="px-lg py-md font-button-label text-button-label text-on-surface-variant uppercase tracking-wider text-right">USD Value</th>
+                                <th class="px-lg py-md font-button-label text-button-label text-on-surface-variant uppercase tracking-wider text-right">24h Change</th>
+                                <th class="px-lg py-md font-button-label text-button-label text-on-surface-variant uppercase tracking-wider"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant">
+                            <!-- USDC -->
+                            <tr class="hover:bg-surface-container-lowest transition-colors">
+                                <td class="px-lg py-md">
+                                    <div class="flex items-center gap-md">
+                                        <div class="w-10 h-10 bg-[#2775CA] rounded-full flex items-center justify-center text-white font-bold">U</div>
+                                        <div class="">
+                                            <p class="font-button-label text-button-label text-primary">USD Coin</p>
+                                            <p class="font-caption text-caption text-secondary">USDC</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-lg py-md text-right font-technical-data text-technical-data">50,000.00</td>
+                                <td class="px-lg py-md text-right font-technical-data text-technical-data">$50,000.00</td>
+                                <td class="px-lg py-md text-right">
+                                    <span class="font-status text-status text-secondary">0.00%</span>
+                                </td>
+                                <td class="px-lg py-md text-right">
+                                    <button class="material-symbols-outlined text-secondary hover:text-primary">more_vert</button>
+                                </td>
+                            </tr>
+                            <!-- ETH -->
+                            <tr class="hover:bg-surface-container-lowest transition-colors">
+                                <td class="px-lg py-md">
+                                    <div class="flex items-center gap-md">
+                                        <div class="w-10 h-10 bg-[#627EEA] rounded-full flex items-center justify-center text-white">
+                                            <span class="material-symbols-outlined text-[20px]" data-original-icon="currency_eth">circle</span>
+                                        </div>
+                                        <div>
+                                            <p class="font-button-label text-button-label text-primary">Ethereum</p>
+                                            <p class="font-caption text-caption text-secondary">ETH</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-lg py-md text-right font-technical-data text-technical-data">24.50</td>
+                                <td class="px-lg py-md text-right font-technical-data text-technical-data">$61,250.00</td>
+                                <td class="px-lg py-md text-right">
+                                    <span class="font-status text-status text-success">+3.12%</span>
+                                </td>
+                                <td class="px-lg py-md text-right">
+                                    <button class="material-symbols-outlined text-secondary hover:text-primary">more_vert</button>
+                                </td>
+                            </tr>
+                            <!-- WBTC -->
+                            <tr class="hover:bg-surface-container-lowest transition-colors">
+                                <td class="px-lg py-md">
+                                    <div class="flex items-center gap-md">
+                                        <div class="w-10 h-10 bg-[#F7931A] rounded-full flex items-center justify-center text-white font-bold">B</div>
+                                        <div>
+                                            <p class="font-button-label text-button-label text-primary">Wrapped Bitcoin</p>
+                                            <p class="font-caption text-caption text-secondary">WBTC</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-lg py-md text-right font-technical-data text-technical-data">0.21</td>
+                                <td class="px-lg py-md text-right font-technical-data text-technical-data">$13,250.00</td>
+                                <td class="px-lg py-md text-right">
+                                    <span class="font-status text-status text-error">-1.45%</span>
+                                </td>
+                                <td class="px-lg py-md text-right">
+                                    <button class="material-symbols-outlined text-secondary hover:text-primary">more_vert</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="p-md bg-surface-container-low text-center">
+                    <button class="font-button-label text-button-label text-primary hover:underline">View All Assets</button>
+                </div>
+            </section>
+
+            <!-- Bottom decorative element -->
+            <div class="mt-xl flex justify-center opacity-30">
+                <div class="w-24 h-1 bg-outline-variant rounded-full"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Micro-interaction Scripts -->
+    <script class="">
+        // Simple ripple-like effect on primary buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mousedown', function(e) {
+                this.classList.add('scale-95');
+            });
+            button.addEventListener('mouseup', function(e) {
+                this.classList.remove('scale-95');
+            });
+            button.addEventListener('mouseleave', function(e)</script></body></html>
