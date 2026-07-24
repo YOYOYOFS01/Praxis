@@ -75,105 +75,68 @@ export default function Dashboard() {
   const status = run?.status as string | undefined;
 
   return (
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "320px 1fr",
-      minHeight: "100vh",
-      background: "var(--bg)",
-    }}>
-      {/* ── Left sidebar ─────────────────────────────────────────────── */}
-      <aside style={{
-        background: "var(--surface)",
-        borderRight: "1px solid var(--border)",
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        position: "sticky",
-        top: 0,
-        overflow: "hidden",
-      }}>
-        {/* Header */}
-        <div style={{
-          padding: "20px 20px 16px",
-          borderBottom: "1px solid var(--border)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexShrink: 0,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
-            <div style={{
-              width: "28px", height: "28px",
-              background: "var(--orange-fill)",
-              border: "1px solid rgba(212,131,74,0.25)",
-              borderRadius: "var(--radius-md)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: "14px",
-            }}>
-              ⬡
-            </div>
-            <span style={{
-              fontSize: "14px", fontWeight: 700,
-              letterSpacing: "-0.02em", color: "var(--text)",
-            }}>
-              Praxis
-            </span>
+    <div className="flex flex-col lg:flex-row gap-xl w-full">
+      {/* ── Left Panel: Chat ─────────────────────────────────────────────── */}
+      <div className="w-full lg:w-[380px] flex flex-col gap-lg flex-shrink-0">
+        <div className="bg-surface-container-lowest border border-outline-variant/50 rounded-2xl p-lg flex flex-col shadow-sm lg:sticky lg:top-[88px] lg:h-[calc(100vh-120px)] overflow-hidden">
+          <div className="mb-md flex items-center justify-between border-b border-outline-variant/30 pb-sm">
+            <h2 className="font-display text-lg font-bold text-on-surface flex items-center gap-2 tracking-tight">
+              <span className="material-symbols-outlined text-primary text-[20px]">robot_2</span> Agent Interaction
+            </h2>
+            <DemoModeBadge />
           </div>
-          <DemoModeBadge />
+          <div className="flex-1 overflow-y-auto pr-sm custom-scrollbar flex flex-col gap-lg pb-md">
+            <ChatPanel onSubmit={handleSubmit} loading={loading} />
+            {run && (
+              <div className="bg-surface-container-high/30 p-md rounded-xl border border-outline-variant/20">
+                <WorkflowTimeline events={events} status={status ?? "running"} />
+              </div>
+            )}
+          </div>
         </div>
+      </div>
 
-        {/* Scrollable body */}
-        <div style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "20px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
-        }}>
-          <ChatPanel onSubmit={handleSubmit} loading={loading} />
-          {run && <WorkflowTimeline events={events} status={status ?? "running"} />}
-        </div>
-      </aside>
-
-      {/* ── Right main panel ─────────────────────────────────────────── */}
-      <main style={{
-        padding: "32px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "16px",
-        overflowY: "auto",
-        minHeight: "100vh",
-      }}>
+      {/* ── Right Panel: Results ─────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col gap-lg overflow-y-auto pb-xl">
         {!run && !loading && <EmptyState />}
         {loading && <LoadingState />}
 
         {run && (
-          <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {run.quoteJson && (
+          <div className="fade-in flex flex-col gap-lg max-w-4xl animate-in slide-in-from-bottom-4 duration-500">
+            <div className="flex items-center gap-md mb-xs">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 text-primary">
+                <span className="material-symbols-outlined">receipt_long</span>
+              </div>
+              <div>
+                <h1 className="font-display text-2xl font-bold text-on-surface tracking-tight">Transaction Details</h1>
+                <p className="font-body text-sm text-on-surface-variant">Review agent executions and cryptographic proofs</p>
+              </div>
+            </div>
+
+            {!!run.quoteJson && (
               <VendorQuoteCard quote={run.quoteJson as Record<string, unknown>} />
             )}
-            {(run.budgetJson || run.policyJson) && (
+            {!!(run.budgetJson || run.policyJson) && (
               <PolicyCheckCard
                 budget={run.budgetJson as Record<string, unknown> | undefined}
                 policy={run.policyJson as Record<string, unknown> | undefined}
               />
             )}
-            {run.proofJson && (
+            {!!run.proofJson && (
               <ProofViewer
                 proof={run.proofJson as Record<string, unknown>}
                 proofHash={run.proofHash as string}
               />
             )}
-            {run.receiptJson && (
+            {!!run.receiptJson && (
               <PaymentCard receipt={run.receiptJson as Record<string, unknown>} />
             )}
-            {run.chainAnchorJson && (
+            {!!run.chainAnchorJson && (
               <ChainAnchorCard anchor={run.chainAnchorJson as Record<string, unknown>} />
             )}
           </div>
         )}
-      </main>
+      </div>
 
       {/* ── HITL modal ───────────────────────────────────────────────── */}
       {status === "awaiting_approval" && run && (
@@ -189,56 +152,28 @@ export default function Dashboard() {
 
 function EmptyState() {
   return (
-    <div style={{
-      flex: 1,
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: "16px",
-      minHeight: "60vh",
-      textAlign: "center",
-    }}>
-      <div style={{
-        width: "56px", height: "56px",
-        background: "var(--orange-fill)",
-        border: "1px solid rgba(212,131,74,0.2)",
-        borderRadius: "var(--radius-xl)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: "24px",
-      }}>
-        ⬡
+    <div className="flex-1 flex flex-col items-center justify-center gap-md min-h-[60vh] text-center px-4">
+      <div className="relative">
+        <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
+        <div className="relative w-20 h-20 bg-gradient-to-br from-surface to-surface-container-highest border border-outline-variant rounded-2xl flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-all duration-300">
+          <span className="material-symbols-outlined text-[36px] text-primary">auto_awesome</span>
+        </div>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-        <p style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)" }}>
+      <div className="flex flex-col gap-2 mt-4">
+        <p className="font-display text-2xl font-bold text-on-surface tracking-tight">
           Ready to procure
         </p>
-        <p style={{ fontSize: "13px", color: "var(--text-muted)", maxWidth: "320px", lineHeight: 1.6 }}>
-          Submit a procurement prompt on the left to start an autonomous payment workflow
+        <p className="text-sm text-on-surface-variant max-w-sm leading-relaxed">
+          Submit a procurement prompt on the left to start an autonomous payment workflow secured by cryptographic guardrails.
         </p>
       </div>
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "6px",
-        marginTop: "8px",
-        width: "100%",
-        maxWidth: "420px",
-      }}>
+      <div className="flex flex-col gap-3 mt-6 w-full max-w-md">
         {[
           "Order 2 Dell XPS 15 from TechVendor Inc",
           "Purchase 5 MacBook Pro M3 from Apple Business Store",
         ].map((ex) => (
-          <div key={ex} style={{
-            padding: "10px 14px",
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--radius-md)",
-            fontSize: "12px",
-            color: "var(--text-2)",
-            textAlign: "left",
-          }}>
-            <span style={{ color: "var(--text-muted)", marginRight: "6px" }}>e.g.</span>
+          <div key={ex} className="p-3 bg-surface-container-lowest border border-outline-variant/60 rounded-xl text-sm text-on-surface text-left shadow-sm hover:border-primary/50 transition-colors cursor-default">
+            <span className="text-primary font-medium mr-2">Example:</span>
             {ex}
           </div>
         ))}
@@ -249,32 +184,19 @@ function EmptyState() {
 
 function LoadingState() {
   return (
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      gap: "12px",
-      padding: "20px",
-      background: "var(--surface)",
-      border: "1px solid var(--border)",
-      borderRadius: "var(--radius-lg)",
-      marginTop: "32px",
-      maxWidth: "360px",
-    }}>
-      <span style={{
-        animation: "spin 0.9s linear infinite",
-        display: "inline-block",
-        color: "var(--orange)",
-        fontSize: "16px",
-        flexShrink: 0,
-      }}>
-        ◌
-      </span>
-      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-        <span style={{ fontSize: "13px", fontWeight: 500, color: "var(--text)" }}>
+    <div className="flex items-center gap-4 p-6 bg-surface-container-lowest border border-outline-variant/50 rounded-2xl mt-8 max-w-md shadow-sm">
+      <div className="relative flex items-center justify-center">
+        <svg className="animate-spin text-primary w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+      <div className="flex flex-col">
+        <span className="font-bold text-on-surface tracking-tight">
           Running procurement workflow
         </span>
-        <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-          Agents are processing your request…
+        <span className="text-xs text-on-surface-variant mt-1">
+          Agents are processing your request securely...
         </span>
       </div>
     </div>

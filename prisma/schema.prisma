@@ -21,6 +21,7 @@ model Tenant {
 
   apiKeys       ApiKey[]
   runs          Run[]
+  users         User[]
   policyConfig  PolicyConfig?
   vendorAllowlist VendorAllowlist[]
   auditLogs     AuditLog[]
@@ -97,6 +98,7 @@ model VendorAllowlist {
 model Run {
   id              String    @id @default(cuid())
   tenantId        String?                          // null = legacy / demo run
+  userId          String?
   apiKeyId        String?                          // which key triggered this run
   status          String    @default("running")
   prompt          String
@@ -115,8 +117,10 @@ model Run {
 
   tenant  Tenant?    @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   events  RunEvent[]
+  user    User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([tenantId])
+  @@index([userId])
   @@index([status])
   @@index([proofHash])
 }
@@ -160,4 +164,83 @@ model AuditLog {
   @@index([tenantId])
   @@index([action])
   @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USER — end user of the platform.
+// ─────────────────────────────────────────────────────────────────────────────
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String                        // bcrypt, cost factor 12
+  name         String?
+  avatarUrl    String?
+  role         String    @default("user")    // "user" | "admin"
+  tenantId     String?                       // optional org linkage
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastLoginAt  DateTime?
+  walletPin       String?                       // bcrypt hash of 6-digit PIN
+  walletPinSetAt  DateTime?
+  totpSecret      String?                       // encrypted TOTP secret
+  totpEnabled     Boolean   @default(false)
+  backupCodes     String?                       // JSON array of hashed backup codes
+
+  tenant  Tenant?   @relation(fields: [tenantId], references: [id])
+  runs    Run[]                              // runs initiated by this user
+  sessions Session[]
+  wallets   Wallet[]
+  spending  SpendingLimit?
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SESSION — user sessions.
+// ─────────────────────────────────────────────────────────────────────────────
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique               // SHA-256 of raw session token
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([token])
+  @@index([userId])
+}
+
+// Tracks failed auth attempts per IP + per email for rate limiting
+model AuthRateLimit {
+  id          String   @id @default(cuid())
+  key         String   @unique             // "login:<ip>" | "login_user:<emailHash>"
+  attempts    Int      @default(0)
+  windowStart DateTime @default(now())
+  lockedUntil DateTime?
+  @@index([key])
+}
+
+model SpendingLimit {
+  id                       String   @id @default(cuid())
+  userId                   String   @unique
+  dailyLimitUsdc           Float    @default(10000)
+  perTxLimitUsdc           Float    @default(5000)
+  requireApprovalAboveUsdc Float    @default(1000)
+  updatedAt                DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Wallet {
+  id         String   @id @default(cuid())
+  userId     String
+  address    String                        // checksummed EVM address
+  chainId    Int
+  label      String?                       // user nickname e.g. "My MetaMask"
+  walletType String   @default("injected") // injected | walletconnect | coinbase | ledger
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, address, chainId])
 }

@@ -45,6 +45,18 @@ export function middleware(req: NextRequest) {
     return res;
   }
 
+  // ── Route Protection ──────────────────────────────────────────────────────
+  const protectedPaths = ["/profile", "/admin", "/history", "/wallet", "/send", "/swap", "/escrow"];
+  const isProtected = protectedPaths.some(p => pathname.startsWith(p));
+  
+  if (isProtected) {
+    const sessionCookie = req.cookies.get("praxis_session");
+    if (!sessionCookie?.value) {
+      const loginUrl = new URL("/login", req.url);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
   const res = NextResponse.next();
   applySecurityHeaders(res);
 
