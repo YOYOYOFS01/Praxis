@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
@@ -20,11 +20,7 @@ export default function ProfilePage() {
   const [totpCode, setTotpCode] = useState("");
   const [twoFaMsg, setTwoFaMsg] = useState("");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [meRes, sessionsRes] = await Promise.all([
         fetch("/api/auth/me"),
@@ -46,7 +42,11 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -226,6 +226,7 @@ export default function ProfilePage() {
               </div>
             ) : setup2fa ? (
               <div className="flex flex-col gap-sm">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={setup2fa.qrCodeUrl} alt="QR Code" className="w-32 h-32 bg-white p-1 rounded" />
                 <input 
                   type="text" value={totpCode} onChange={e => setTotpCode(e.target.value)} 
