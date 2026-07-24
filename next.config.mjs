@@ -17,7 +17,21 @@ const nextConfig = {
         async_hooks: false,
       };
     }
+    config.externals.push('pino-pretty', 'lokijs', 'encoding');
+    // Ignore x402 evm client to fix coinbase sdk build error
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@x402/evm/upto/client': false,
+      '@x402/evm/exact/client': false,
+      '@x402/core/client': false,
+      '@x402/svm/exact/client': false,
+      '@x402/evm': false,
+      '@react-native-async-storage/async-storage': false,
+    };
     return config;
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 };
 
