@@ -1,6 +1,5 @@
 import { mastra } from "@/src/mastra/index";
 import { runStore } from "@/src/store/run-store";
-import { runPaymentFirewall } from "@/src/payment/payment-firewall";
 import { executePayment } from "@/src/payment/payment-executor";
 import { anchorPayment } from "@/src/blockchain/registry-client";
 import { hashProof } from "@/src/proof/hash-proof";
@@ -345,22 +344,8 @@ async function _executeAndAnchor(
     createdAt:    new Date().toISOString(),
   };
 
-  // Payment firewall — deterministic, no agent
-  const firewallResult = runPaymentFirewall(paymentIntent, proof);
-  await runStore.addEvent(runId, {
-    type: "payment",
-    label: firewallResult.approved ? "Payment firewall passed" : "Payment firewall BLOCKED",
-    status: firewallResult.approved ? "success" : "failed",
-    payload: { reason: firewallResult.reason },
-  });
-
-  if (!firewallResult.approved) {
-    await runStore.setStatus(runId, "failed");
-    return { status: "failed", runId, run: await runStore.getById(runId) };
-  }
-
-  // Execute payment
-  const receipt = await executePayment(paymentIntent);
+  // Execute payment — firewall is enforced inside executePayment before any payment mode
+  const receipt = await executePayment(paymentIntent, proof);
   await runStore.setPayment(runId, receipt);
   await runStore.addEvent(runId, {
     type: "payment", label: `Payment executed (${receipt.mode})`, status: "success",

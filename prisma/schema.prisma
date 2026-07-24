@@ -69,6 +69,11 @@ model PolicyConfig {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
+  // x402 gateway flags
+  allowX402Gateway      Boolean  @default(true)
+  x402SettlementMode    String   @default("pre-signed")  // "pre-signed" | "facilitator"
+  x402MaxAmountUsdc     String   @default("100.00")      // String — never Float
+
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 }
 
@@ -243,4 +248,147 @@ model Wallet {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, address, chainId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// x402 PAYMENT GATEWAY MODELS
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NONCE RECORD — Replay protection registry.
+//                Tracks nonces issued in 402 responses. Each nonce is consumable
+//                exactly once, with a TTL hard-capped at 300 seconds.
+// ─────────────────────────────────────────────────────────────────────────────
+model NonceRecord {
+  id          String    @id @default(cuid())
+  nonce       String    @unique              // crypto.randomUUID() — never reused
+  resource    String                         // URL of the protected endpoint
+  amountUsdc  String                         // expected payment amount (String, never Float)
+  payTo       String                         // expected receiver address (checksummed)
+  network     String                         // CAIP-2 e.g. "eip155:84532"
+  status      String    @default("pending")  // "pending" | "used" | "expired"
+  issuedAt    DateTime  @default(now())
+  expiresAt   DateTime                       // issuedAt + nonceTtlSeconds (capped at 300s)
+  usedAt      DateTime?                      // set when status → "used"
+  usedByTx    String?                        // txHash of the payment that consumed this nonce
+  ipAddress   String?                        // IP that triggered the 402
+
+  @@index([nonce])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAYMENT RECORD — Verified payment ledger.
+//                  Immutable record of every successful x402 payment.
+// ─────────────────────────────────────────────────────────────────────────────
+model PaymentRecord {
+  id                String   @id @default(cuid())
+  nonce             String   @unique
+  paymentIntentId   String   @unique          // FK to PaymentIntent
+  resource          String
+  payerAddress      String                    // recovered from EIP-712 signature
+  payTo             String
+  amountUsdc        String                    // human-readable string e.g. "1.00" — never Float
+  amountAtomicUnits String                    // e.g. "1000000" — for BigInt on-chain comparison
+  asset             String                    // USDC contract address
+  network           String                    // CAIP-2
+  chainId           Int                       // numeric chain ID from ChainConfig
+  signature         String
+  txHash            String?
+  settlementMode    String                    // "pre-signed" | "facilitator"
+  verifiedAt        DateTime @default(now())
+  tenantId          String?
+  runId             String?
+
+  @@index([resource])
+  @@index([payerAddress])
+  @@index([verifiedAt])
+  @@index([tenantId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAYMENT INTENT — Lifecycle tracker for payment attempts.
+//                  Only created when X-Payment header is present (not on raw 402).
+//                  Prevents DB bloat from abandoned 402s (bots, crawlers).
+// ─────────────────────────────────────────────────────────────────────────────
+model PaymentIntent {
+  id              String    @id @default(cuid())
+  nonce           String    @unique
+  correlationId   String?                     // from X-Request-Id header — for log tracing
+  idempotencyKey  String?   @unique           // from Idempotency-Key header — dedup retries
+  resource        String
+  amountUsdc      String                      // string — never Float
+  payTo           String
+  payerAddress    String?                     // set when CREATED (recovered from sig)
+  chainId         Int
+  status          String    @default("CREATED")  // "CREATED" | "VERIFYING" | "SETTLED" | "FAILED"
+  failureReason   String?
+  paymentRecordId String?                     // set when SETTLED
+  createdAt       DateTime  @default(now())   // when X-Payment header first received
+  verifyingAt     DateTime?
+  settledAt       DateTime?
+  failedAt        DateTime?
+  expiresAt       DateTime                    // matches NonceRecord.expiresAt
+
+  @@index([nonce])
+  @@index([status])
+  @@index([resource])
+  @@index([createdAt])
+  @@index([correlationId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENDPOINT CONFIG — Gateway-protected route registry.
+//                   Defines payment parameters for each x402-protected endpoint.
+// ─────────────────────────────────────────────────────────────────────────────
+model EndpointConfig {
+  id              String   @id @default(cuid())
+  resource        String   @unique
+  amountUsdc      String                      // string — never Float
+  description     String
+  payTo           String
+  asset           String                      // from ChainConfig — not hardcoded
+  network         String                      // CAIP-2 from ChainConfig
+  chainId         Int                         // numeric chain ID
+  nonceTtlSeconds Int      @default(300)
+  isActive        Boolean  @default(true)
+  tenantId        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([resource])
+  @@index([tenantId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WEBHOOK ENDPOINT — Tenant-configured webhook URLs for x402 events.
+// ─────────────────────────────────────────────────────────────────────────────
+model WebhookEndpoint {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  url       String
+  secret    String                            // for HMAC-SHA256 signature
+  events    String                            // JSON array stored as string
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WEBHOOK DELIVERY — Async webhook delivery queue.
+//                    Worker processes queued rows with retry backoff.
+// ─────────────────────────────────────────────────────────────────────────────
+model WebhookDelivery {
+  id             String    @id @default(cuid())
+  endpointId     String
+  event          String
+  payload        String                        // JSON stored as string
+  correlationId  String?
+  responseStatus Int?
+  attemptCount   Int       @default(0)
+  nextRetryAt    DateTime?
+  status         String    @default("queued")  // "queued" | "delivered" | "dead"
+  createdAt      DateTime  @default(now())
+  deliveredAt    DateTime?
 }
