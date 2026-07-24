@@ -2,41 +2,128 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Premium Dark Mode Glassmorphism Theme */
+  --bg-color: #0a0a0f;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-glow: rgba(138, 43, 226, 0.15);
+  --glass-hover: rgba(255, 255, 255, 0.05);
+  
+  --primary-color: #8a2be2;
+  --primary-hover: #9d4edd;
+  --accent-color: #00f5d4;
+  --danger-color: #ff0054;
+  --success-color: #00b4d8;
+}
+
 @layer base {
   body {
-    @apply bg-background text-on-background font-body text-body selection:bg-primary-fixed selection:text-primary min-h-screen;
+    background-color: var(--bg-color) !important;
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.08), transparent 25%),
+      radial-gradient(circle at 85% 30%, rgba(0, 245, 212, 0.05), transparent 25%) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Outfit', sans-serif !important;
+    min-height: 100vh;
   }
 }
 
-@layer utilities {
-  .material-symbols-outlined {
-    font-family: 'Material Symbols Outlined';
-    font-weight: normal;
-    font-style: normal;
-    font-size: 20px;
-    line-height: 1;
-    letter-spacing: normal;
-    text-transform: none;
-    display: inline-block;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    -webkit-font-feature-settings: 'liga';
-    font-feature-settings: 'liga';
-    -webkit-font-smoothing: antialiased;
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-    vertical-align: middle;
-  }
-  
-  .auth-card {
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
-  }
-  
-  .form-input {
-    transition: border-width 0.1s ease-in-out, ring 0.1s ease-in-out;
-  }
-  
-  .btn-interact:active {
-    transform: scale(0.98);
-  }
+/* Glassmorphism Utilities (Vanilla CSS) */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.glass-panel:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px 0 var(--glass-glow);
+}
+
+.glass-button {
+  background: linear-gradient(135deg, rgba(138,43,226,0.8), rgba(90,24,154,0.8));
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  color: white;
+  padding: 10px 20px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.glass-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px var(--glass-glow);
+  background: linear-gradient(135deg, rgba(157,78,221,0.9), rgba(123,44,191,0.9));
+}
+
+.glass-button:active {
+  transform: translateY(0);
+}
+
+.glass-input {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: white;
+  width: 100%;
+  font-family: 'Outfit', sans-serif;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+}
+
+.glass-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Material Symbols Fix */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
 }
