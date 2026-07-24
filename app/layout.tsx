@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-page-custom-font, @next/next/google-font-display */
 import type { Metadata } from "next";
 import "./globals.css";
 import AppShell from "@/components/layout/AppShell";
