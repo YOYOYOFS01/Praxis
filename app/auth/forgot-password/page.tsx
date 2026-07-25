@@ -53,13 +53,13 @@ export default function ForgotPasswordPage() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-lg">
           {error && (
             <div className="bg-error-container text-error px-md py-sm rounded-lg font-body text-caption border border-error/20 flex items-center gap-sm">
-              <span className="material-symbols-outlined text-[16px]">error</span>
+              <span className="font-bold text-[16px]">!</span>
               {error}
             </div>
           )}
           {message && (
             <div className="bg-emerald-900/30 text-emerald-400 px-md py-sm rounded-lg font-body text-caption border border-emerald-500/20 flex items-center gap-sm">
-              <span className="material-symbols-outlined text-[16px]">check_circle</span>
+              <span className="text-success font-bold text-[16px]">✓</span>
               {message}
             </div>
           )}

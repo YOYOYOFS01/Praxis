@@ -39,7 +39,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const promptResult = sanitizePrompt((body as Record<string, unknown>)?.prompt);
+  const bodyObj = (body as Record<string, unknown>) ?? {};
+  const mockModeParam = bodyObj.mockMode;
+  const headerMock = req.headers.get("x-mock-mode") === "true" || req.headers.get("x-demo-mode") === "true";
+  const isMock = typeof mockModeParam === "boolean" ? mockModeParam : headerMock ? true : undefined;
+
+  const promptResult = sanitizePrompt(bodyObj.prompt);
   if (!promptResult.ok) {
     return NextResponse.json({ error: promptResult.error }, { status: 400 });
   }
@@ -66,7 +71,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const result = await runPurchaseWorkflow(runId, promptResult.value, tenantId);
+    const result = await runPurchaseWorkflow(runId, promptResult.value, tenantId, { mockMode: isMock });
     return NextResponse.json(result);
   } catch (err) {
     logger.error("POST /api/purchase", "Workflow error", err);

@@ -12,33 +12,30 @@ export default function AnalyticsPage() {
         <div className="glass-panel p-6 flex flex-col gap-2">
           <div className="flex justify-between items-center">
             <span className="text-secondary text-sm font-medium uppercase tracking-wider">Total Volume</span>
-            <span className="material-symbols-outlined text-primary">payments</span>
           </div>
           <div className="text-4xl font-bold mt-2">$2.4M</div>
           <div className="text-success text-sm flex items-center gap-1 mt-1">
-             <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>trending_up</span> +14.5% from last month
+             ↑ +14.5% from last month
           </div>
         </div>
         
         <div className="glass-panel p-6 flex flex-col gap-2">
           <div className="flex justify-between items-center">
             <span className="text-secondary text-sm font-medium uppercase tracking-wider">Active Runs</span>
-            <span className="material-symbols-outlined text-accent">robot_2</span>
           </div>
           <div className="text-4xl font-bold mt-2">1,204</div>
           <div className="text-success text-sm flex items-center gap-1 mt-1">
-             <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>trending_up</span> +5.2% from last month
+             ↑ +5.2% from last month
           </div>
         </div>
         
         <div className="glass-panel p-6 flex flex-col gap-2">
           <div className="flex justify-between items-center">
             <span className="text-secondary text-sm font-medium uppercase tracking-wider">Rejection Rate</span>
-            <span className="material-symbols-outlined text-danger">gpp_bad</span>
           </div>
           <div className="text-4xl font-bold mt-2">3.8%</div>
           <div className="text-danger text-sm flex items-center gap-1 mt-1">
-             <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>trending_down</span> Guardrail blocks increased
+             ↓ Guardrail blocks increased
           </div>
         </div>
       </div>

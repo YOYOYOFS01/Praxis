@@ -192,8 +192,8 @@ export default function ProfilePage() {
                       <p className="font-bold text-on-surface text-[18px]">{user?.name || "N/A"}</p>
                       <p className="text-sm text-on-surface-variant">{user?.email}</p>
                     </div>
-                    <button onClick={() => setIsEditingName(true)} className="text-sm text-primary font-medium hover:underline flex items-center gap-xs">
-                      <span className="material-symbols-outlined text-[16px]">edit</span> Edit
+                    <button onClick={() => setIsEditingName(true)} className="text-sm text-primary font-medium hover:underline">
+                      Edit
                     </button>
                   </>
                 )}
@@ -207,7 +207,6 @@ export default function ProfilePage() {
               onClick={handleLogout}
               className="bg-surface-container-high border border-outline-variant text-on-surface px-md py-sm rounded-lg hover:bg-surface-container transition-colors font-button-label text-button-label flex items-center gap-sm justify-center w-full"
             >
-              <span className="material-symbols-outlined text-[18px]">logout</span>
               Sign out
             </button>
           </div>
@@ -221,7 +220,7 @@ export default function ProfilePage() {
             <h3 className="font-status text-status text-on-surface mb-xs">TWO-FACTOR AUTHENTICATION</h3>
             {user?.totpEnabled ? (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-success flex items-center gap-xs"><span className="material-symbols-outlined text-[16px]">check_circle</span> Enabled</span>
+                <span className="text-sm text-success font-medium">Enabled</span>
                 <button onClick={handleDisable2FA} className="text-xs bg-error-container text-error px-sm py-xs rounded">Disable</button>
               </div>
             ) : setup2fa ? (
@@ -295,8 +294,8 @@ export default function ProfilePage() {
             {sessions.map((s) => (
               <li key={s.id} className="border border-outline-variant bg-surface p-md rounded-lg flex justify-between items-center">
                 <div className="flex items-center gap-md">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${s.isCurrent ? "bg-success/10 border-success/30 text-success" : "bg-surface-container-high border-outline-variant text-on-surface-variant"}`}>
-                    <span className="material-symbols-outlined">{s.isCurrent ? "devices" : "laptop_mac"}</span>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border font-bold text-xs ${s.isCurrent ? "bg-success/10 border-success/30 text-success" : "bg-surface-container-high border-outline-variant text-on-surface-variant"}`}>
+                    {s.isCurrent ? "DEV" : "WEB"}
                   </div>
                   <div>
                     <p className="font-medium text-on-surface text-sm flex items-center gap-xs">
@@ -320,7 +319,6 @@ export default function ProfilePage() {
       {/* Danger Zone */}
       <div className="bg-error-container/50 border border-error/30 rounded-xl p-lg mt-md">
         <div className="flex items-start gap-md">
-          <span className="material-symbols-outlined text-error text-[28px]">warning</span>
           <div>
             <h2 className="font-section-title text-section-title text-error mb-xs">Danger Zone</h2>
             <p className="text-sm text-on-error-container mb-md">Once you delete your account, there is no going back. All your data, settings, and sessions will be permanently destroyed. Please be certain.</p>

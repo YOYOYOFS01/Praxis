@@ -62,7 +62,7 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
         {success ? (
           <div className="text-center py-xl flex flex-col gap-md items-center">
             <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-sm">
-              <span className="material-symbols-outlined text-[24px]">check</span>
+              <span className="text-success font-bold text-[24px]">✓</span>
             </div>
             <h2 className="font-bold text-on-surface text-lg">Password Reset Successfully</h2>
             <p className="text-on-surface-variant text-sm">Redirecting to login...</p>
@@ -71,7 +71,7 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
           <form onSubmit={handleSubmit} className="flex flex-col gap-lg">
             {error && (
               <div className="bg-error-container text-error px-md py-sm rounded-lg font-body text-caption border border-error/20 flex items-center gap-sm">
-                <span className="material-symbols-outlined text-[16px]">error</span>
+                <span className="font-bold text-[16px]">!</span>
                 {error}
               </div>
             )}

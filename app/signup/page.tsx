@@ -77,7 +77,7 @@ export default function SignupPage() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-md">
           {error && (
             <div className="bg-error-container text-error px-md py-sm rounded-lg font-body text-caption border border-error/20 flex items-center gap-sm">
-              <span className="material-symbols-outlined text-[16px]">error</span>
+              <span className="font-bold text-[16px]">!</span>
               {error}
             </div>
           )}
@@ -149,7 +149,7 @@ export default function SignupPage() {
                 className="appearance-none w-4 h-4 border border-outline-variant rounded bg-surface-container-low checked:bg-primary checked:border-primary transition-colors cursor-pointer peer"
                 required
               />
-              <span className="material-symbols-outlined text-[12px] text-on-primary absolute pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity">check</span>
+              <span className="text-[12px] font-bold text-on-primary absolute pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity">✓</span>
             </div>
             <span className="font-body text-caption text-on-surface-variant group-hover:text-on-surface transition-colors leading-snug">
               I accept the <Link href="#" className="text-primary underline">Terms of Service</Link> and <Link href="#" className="text-primary underline">Privacy Policy</Link>

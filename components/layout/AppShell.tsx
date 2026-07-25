@@ -65,12 +65,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <div className="flex items-center gap-md">
           <WalletConnectButton />
-          <div className="flex items-center gap-sm text-secondary">
-            <button className="p-xs hover:text-primary active:scale-95 transition-all">
-              <span className="material-symbols-outlined">notifications</span>
+          <div className="flex items-center gap-md text-secondary text-sm font-medium">
+            <button className="hover:text-primary active:scale-95 transition-all">
+              Notifications
             </button>
-            <Link href="/profile" className="p-xs hover:text-primary active:scale-95 transition-all" title="Profile">
-              <span className="material-symbols-outlined">settings</span>
+            <Link href="/profile" className="hover:text-primary active:scale-95 transition-all" title="Profile">
+              Settings
             </Link>
             {user && (
               <Link href="/profile">
@@ -104,7 +104,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                       : "text-on-surface-variant hover:bg-surface-variant transition-all"
                   }`}
                 >
-                  <span className="material-symbols-outlined">{link.icon}</span>
                   <span className="font-button-label text-button-label">{link.name}</span>
                 </Link>
               );
@@ -113,11 +112,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="mt-auto flex flex-col gap-xs border-t border-outline-variant pt-lg">
             <Link href="/security" className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all">
-              <span className="material-symbols-outlined">shield_lock</span>
               <span className="font-button-label text-button-label">Security</span>
             </Link>
             <Link href="/docs" className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all">
-              <span className="material-symbols-outlined">description</span>
               <span className="font-button-label text-button-label">Docs</span>
             </Link>
             <button className="mt-md bg-surface-container-highest text-primary border border-outline px-md py-sm rounded-lg font-button-label text-button-label active:scale-95 transition-transform text-center block w-full">

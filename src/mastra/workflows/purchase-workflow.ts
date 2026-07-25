@@ -33,7 +33,8 @@ function extractJson<T>(text: string, fallback: T): T {
 
 // ─── Mock agent bypass (MOCK_AGENTS=true or no OPENAI_API_KEY) ───────────────
 // Lets the full workflow run end-to-end in demo/hackathon mode without any LLM key.
-function isMockMode() {
+function isMockMode(mockModeOverride?: boolean) {
+  if (typeof mockModeOverride === "boolean") return mockModeOverride;
   return process.env.MOCK_AGENTS === "true" || !process.env.OPENAI_API_KEY;
 }
 
@@ -131,13 +132,16 @@ function mockParseIntent(runId: string, prompt: string): PurchaseIntent & {
 export async function runPurchaseWorkflow(
   runId: string,
   prompt: string,
-  tenantId?: string | null
+  tenantId?: string | null,
+  options?: { mockMode?: boolean }
 ): Promise<WorkflowResult> {
+  const isMock = isMockMode(options?.mockMode);
   // Build a RequestContext so agents can read runId, modelSelection, etc.
   const ctx = new Map<string, unknown>([
     ["runId", runId],
     ["tenantId", tenantId ?? null],
     ["modelSelection", process.env.OPENAI_MODEL ?? "gpt-4o-mini"],
+    ["mockMode", isMock],
   ]);
 
   try {
@@ -148,16 +152,21 @@ export async function runPurchaseWorkflow(
       quoteId: string; validUntil: string; paymentAddress: string;
     };
 
-    if (isMockMode()) {
+    if (isMock) {
       procData = mockParseIntent(runId, prompt);
     } else {
-      const procAgent = mastra.getAgent("procurement-agent");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const procResp = await (procAgent as any).generate(
-        [{ role: "user", content: `Parse and quote this procurement request:\n\n"${prompt}"` }],
-        { requestContext: ctx }
-      );
-      procData = extractJson(procResp.text, mockParseIntent(runId, prompt));
+      try {
+        const procAgent = mastra.getAgent("procurement-agent");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const procResp = await (procAgent as any).generate(
+          [{ role: "user", content: `Parse and quote this procurement request:\n\n"${prompt}"` }],
+          { requestContext: ctx }
+        );
+        procData = extractJson(procResp.text, mockParseIntent(runId, prompt));
+      } catch (err) {
+        logger.warn("procurement-agent", "LLM call failed, falling back to mock mode for hackathon resilience", err);
+        procData = mockParseIntent(runId, prompt);
+      }
     }
 
     const intent: PurchaseIntent = {
@@ -198,26 +207,32 @@ export async function runPurchaseWorkflow(
     let budgetDecision: BudgetDecision;
     let policyDecision: PolicyDecision;
 
-    if (isMockMode()) {
+    if (isMock) {
       budgetDecision = await runBudgetGuard(intent, tenantId);
       policyDecision = await runPolicyGuard(intent, quote, tenantId);
     } else {
-      const gAgent = mastra.getAgent("guard-agent");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const guardResp = await (gAgent as any).generate(
-        [{
-          role: "user",
-          content: `Run both guards IN PARALLEL for this purchase:\n\nIntent: ${JSON.stringify(intent)}\nQuote: ${JSON.stringify(quote)}`,
-        }],
-        { requestContext: ctx }
-      );
-      type GuardResult = { budgetDecision: BudgetDecision; policyDecision: PolicyDecision };
-      const guardData = extractJson<GuardResult>(guardResp.text, {
-        budgetDecision: { approved: false, remainingBudgetUsd: 0, reason: "Guard response parse failed" },
-        policyDecision: { approved: false, violatedPolicies: ["GUARD_PARSE_ERROR"], reason: "Guard response parse failed" },
-      });
-      budgetDecision = guardData.budgetDecision;
-      policyDecision = guardData.policyDecision;
+      try {
+        const gAgent = mastra.getAgent("guard-agent");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const guardResp = await (gAgent as any).generate(
+          [{
+            role: "user",
+            content: `Run both guards IN PARALLEL for this purchase:\n\nIntent: ${JSON.stringify(intent)}\nQuote: ${JSON.stringify(quote)}`,
+          }],
+          { requestContext: ctx }
+        );
+        type GuardResult = { budgetDecision: BudgetDecision; policyDecision: PolicyDecision };
+        const guardData = extractJson<GuardResult>(guardResp.text, {
+          budgetDecision: { approved: false, remainingBudgetUsd: 0, reason: "Guard response parse failed" },
+          policyDecision: { approved: false, violatedPolicies: ["GUARD_PARSE_ERROR"], reason: "Guard response parse failed" },
+        });
+        budgetDecision = guardData.budgetDecision;
+        policyDecision = guardData.policyDecision;
+      } catch (err) {
+        logger.warn("guard-agent", "LLM call failed, falling back to deterministic policy/budget guard", err);
+        budgetDecision = await runBudgetGuard(intent, tenantId);
+        policyDecision = await runPolicyGuard(intent, quote, tenantId);
+      }
     }
 
     await runStore.setBudget(runId, budgetDecision);
@@ -258,21 +273,26 @@ export async function runPurchaseWorkflow(
       generatedAt: new Date().toISOString(),
     };
 
-    if (isMockMode()) {
+    if (isMock) {
       proof = fallbackProof;
     } else {
-      const pAgent = mastra.getAgent("proof-agent");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const proofResp = await (pAgent as any).generate(
-        [{
-          role: "user",
-          content: `Build the Proof-of-Reasoning for this procurement.\n\nIntent: ${JSON.stringify(intent)}\nQuote: ${JSON.stringify(quote)}\nBudget: ${JSON.stringify(budgetDecision)}\nPolicy: ${JSON.stringify(policyDecision)}`,
-        }],
-        { requestContext: ctx }
-      );
-      type ProofResult = { proof: ProofOfReasoning; proofHash: string };
-      const proofData = extractJson<ProofResult>(proofResp.text, { proof: fallbackProof, proofHash: "" });
-      proof = proofData.proof ?? fallbackProof;
+      try {
+        const pAgent = mastra.getAgent("proof-agent");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const proofResp = await (pAgent as any).generate(
+          [{
+            role: "user",
+            content: `Build the Proof-of-Reasoning for this procurement.\n\nIntent: ${JSON.stringify(intent)}\nQuote: ${JSON.stringify(quote)}\nBudget: ${JSON.stringify(budgetDecision)}\nPolicy: ${JSON.stringify(policyDecision)}`,
+          }],
+          { requestContext: ctx }
+        );
+        type ProofResult = { proof: ProofOfReasoning; proofHash: string };
+        const proofData = extractJson<ProofResult>(proofResp.text, { proof: fallbackProof, proofHash: "" });
+        proof = proofData.proof ?? fallbackProof;
+      } catch (err) {
+        logger.warn("proof-agent", "LLM call failed, falling back to deterministic proof", err);
+        proof = fallbackProof;
+      }
     }
 
     // Always recompute hash server-side — never trust an agent-provided hash
@@ -307,7 +327,14 @@ export async function runPurchaseWorkflow(
       });
       await runStore.setStatus(runId, "failed");
     } catch { /* DB might be unavailable */ }
-    return { status: "failed", runId, run: await runStore.getById(runId) };
+    const erroredRun = (await runStore.getById(runId)) ?? {
+      id: runId,
+      status: "failed",
+      prompt,
+      events: [{ id: "err", runId, type: "workflow", label: "Workflow error", status: "failed", payload: { error: String(err) }, createdAt: new Date() }],
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return { status: "failed", runId, run: erroredRun as any };
   }
 }
 

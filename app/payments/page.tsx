@@ -16,7 +16,6 @@ export default function PaymentsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="glass-panel p-6">
           <div className="flex items-center gap-2 mb-6">
-            <span className="material-symbols-outlined text-primary">send</span>
             <h2 className="text-xl font-semibold">Send Funds</h2>
           </div>
           
@@ -51,7 +50,6 @@ export default function PaymentsPage() {
         
         <div className="glass-panel p-6 flex flex-col items-center justify-center text-center">
           <div className="flex items-center gap-2 mb-4">
-            <span className="material-symbols-outlined text-accent">qr_code_2</span>
             <h2 className="text-xl font-semibold">Receive Funds</h2>
           </div>
           <p className="text-sm text-secondary mb-6">Scan QR code to receive payments directly to your connected wallet.</p>
@@ -64,8 +62,8 @@ export default function PaymentsPage() {
           
           <div className="w-full bg-black/20 p-3 rounded-lg border border-white/10 flex justify-between items-center">
             <span className="text-sm text-secondary truncate mr-2">0x1234...abcd</span>
-            <button className="text-primary hover:text-primary-hover transition-colors">
-               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>content_copy</span>
+            <button className="text-primary hover:text-primary-hover transition-colors text-sm font-medium">
+               Copy
             </button>
           </div>
         </div>

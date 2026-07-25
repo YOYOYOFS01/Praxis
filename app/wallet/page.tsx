@@ -52,7 +52,7 @@ export default function WalletPage() {
                 </div>
                 {isConnected && (
                   <button className="bg-primary text-on-primary p-2 rounded-lg hover:bg-inverse-surface transition-colors">
-                    <span className="material-symbols-outlined text-[20px]">content_copy</span>
+                    <span className="text-xs font-semibold">Copy</span>
                   </button>
                 )}
               </div>
@@ -63,7 +63,7 @@ export default function WalletPage() {
         {/* Security Controls */}
         <div className="bg-surface-container-lowest border border-outline-variant/50 rounded-2xl p-lg flex flex-col shadow-sm">
           <h3 className="font-section-title text-lg text-on-surface mb-md flex items-center gap-xs">
-            <span className="material-symbols-outlined text-primary">lock</span> Security Controls
+            Security Controls
           </h3>
           
           <div className="flex flex-col gap-md flex-1">
@@ -92,7 +92,7 @@ export default function WalletPage() {
                 <p className="text-sm font-bold text-on-surface">Session Expiry</p>
                 <p className="text-xs text-on-surface-variant mt-1">Auto-lock after 15 mins</p>
               </div>
-              <span className="material-symbols-outlined text-success text-[18px]">check_circle</span>
+              <span className="text-success font-bold text-sm">✓</span>
             </div>
           </div>
         </div>
@@ -103,7 +103,7 @@ export default function WalletPage() {
         <h3 className="font-section-title text-lg text-on-surface mb-md">Recent Agent Activity</h3>
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="w-16 h-16 bg-surface-container-high rounded-full flex items-center justify-center mb-md border border-outline-variant">
-            <span className="material-symbols-outlined text-on-surface-variant text-[28px]">history</span>
+            <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-sm text-on-surface-variant">H</div>
           </div>
           <p className="text-on-surface font-medium">No recent transactions</p>
           <p className="text-sm text-on-surface-variant mt-1 max-w-md">Once your AI agent executes transactions on your behalf, they will appear here with cryptographically verifiable proofs.</p>
