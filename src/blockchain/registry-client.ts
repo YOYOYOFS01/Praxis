@@ -74,10 +74,10 @@ async function _callRegistry(intent: PaymentIntent): Promise<ChainAnchor> {
 function buildMockAnchor(intent: PaymentIntent, meta?: object): ChainAnchor {
   return {
     registryAddress: process.env.PRAXIS_REGISTRY_ADDRESS ?? "0xMOCK_REGISTRY",
-    anchorTxHash: `0xmock_anchor_${intent.proofHash.slice(2, 10)}_${Date.now().toString(16)}`,
+    anchorTxHash: `0xmock_anchor_${intent.proofHash ? intent.proofHash.slice(2, 10) : "unknown"}_${Date.now().toString(16)}`,
     chainId: 84532,
     network: "base-sepolia",
-    proofHash: intent.proofHash,
+    proofHash: intent.proofHash ?? "0x0000000000000000000000000000000000000000000000000000000000000000",
     eventName: "PraxisPaymentRecorded",
     anchoredAt: new Date().toISOString(),
     ...(meta ?? {}),
